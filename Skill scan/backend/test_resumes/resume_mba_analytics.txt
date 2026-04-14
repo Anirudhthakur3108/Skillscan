@@ -1,0 +1,111 @@
+================================================================================
+                          JOHN DATA - RESUME
+================================================================================
+
+Email: john.data@email.com | Phone: +91-98765-43210 | LinkedIn: linkedin.com/in/johndata
+Location: Bangalore, India
+
+================================================================================
+PROFESSIONAL SUMMARY
+================================================================================
+
+Results-driven Data Analyst with 2+ years of experience in business analytics,
+data visualization, and statistical analysis. Proven expertise in Python, SQL,
+and advanced Excel for driving data-informed business decisions. Strong 
+background in transforming raw data into actionable insights for stakeholders.
+
+
+================================================================================
+PROFESSIONAL EXPERIENCE
+================================================================================
+
+Senior Data Analyst | TechCorp Solutions | Aug 2022 - Present (1.5 years)
+• Developed interactive dashboards using Tableau and Power BI, improving 
+  stakeholder decision-making speed by 40%
+• Optimized SQL queries for large-scale data extraction, reducing query time 
+  from 15 minutes to 2 minutes
+• Conducted statistical analysis on customer behavior data using Python and R,
+  identifying 3 key revenue optimization opportunities
+• Automated reporting processes using Excel VBA macros, saving 20+ hours/week 
+  in manual work
+
+Data Analyst Intern | DataInsights Inc. | Jan 2022 - Jul 2022 (7 months)
+• Performed exploratory data analysis on 5M+ records using Python (Pandas, NumPy)
+• Created pivot tables and data models in Excel for executive reporting
+• Assisted in SQL database optimization and query writing
+• Supported statistical analysis for A/B testing initiatives
+
+
+================================================================================
+TECHNICAL SKILLS
+================================================================================
+
+Programming Languages:
+  • Python (Advanced): Pandas, NumPy, Matplotlib, Scikit-learn, Data Processing
+  • SQL (Advanced): SELECT, WHERE, JOINs, Aggregation, Subqueries, Optimization
+  • R (Intermediate): Statistical modeling, ggplot2 for visualization
+
+Data Visualization & BI Tools:
+  • Tableau (Proficient): Dashboard creation, data sources, calculations, storytelling
+  • Power BI (Intermediate): DAX formulas, data modeling, custom visuals
+  • Excel (Advanced): VLOOKUP, Pivot Tables, Advanced Formulas, VBA Macro Programming
+
+Data Science & Analytics:
+  • Statistical Analysis (Intermediate): Hypothesis testing, probability distributions
+  • Data Analysis Methodology: Data exploration, insight generation, business reporting
+  • Machine Learning (Beginner): Supervised/unsupervised learning concepts
+  • Data Preprocessing & Cleaning
+
+Databases:
+  • PostgreSQL, MySQL, SQL Server
+  • Data modeling and normalization
+
+
+================================================================================
+EDUCATION
+================================================================================
+
+MBA in Business Analytics | Indian Institute of Management | 2020 - 2022
+GPA: 3.8/4.0 | Specialization: Data Analytics & Business Intelligence
+
+Bachelor of Technology in Computer Science | Delhi University | 2016 - 2020
+GPA: 3.7/4.0 | Relevant Coursework: Statistics, Database Systems, Python Programming
+
+
+================================================================================
+PROJECTS & ACHIEVEMENTS
+================================================================================
+
+Customer Retention Analysis Dashboard (Tableau):
+• Built interactive dashboard analyzing customer churn patterns
+• Identified 5 key retention drivers, resulting in 15% improvement
+• Metrics: 2M+ customer records, 50+ metrics tracked
+
+Sales Forecasting Model (Python + Statistical Analysis):
+• Developed time-series forecasting model using Python and statistics
+• Achieved 92% accuracy in quarterly sales predictions
+• Saved company $500K in inventory costs
+
+Automated ETL Pipeline (SQL + Python):
+• Designed automated data pipeline to extract, transform, load (ETL) data
+• Reduced manual data processing time by 30 hours/week
+• Processes 10M+ records daily across multiple data sources
+
+
+================================================================================
+CERTIFICATIONS
+================================================================================
+
+• Google Data Analytics Professional Certificate | 2021
+• Tableau Desktop Specialist | 2022
+• SQL for Data Analysis Certification | 2021
+
+
+================================================================================
+LANGUAGES
+================================================================================
+
+• English (Fluent)
+• Hindi (Native)
+
+================================================================================

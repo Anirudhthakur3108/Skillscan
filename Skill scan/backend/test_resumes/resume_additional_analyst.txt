@@ -1,0 +1,120 @@
+================================================================================
+                    PRIYA PATEL - ANALYTICAL RESUME
+================================================================================
+
+Email: priya.patel@email.com | Phone: +91-94567-89012 | LinkedIn: linkedin.com/in/priyapatel
+GitHub: github.com/priyapatel | Location: Mumbai, India
+
+================================================================================
+PROFESSIONAL SUMMARY
+================================================================================
+
+Data-Driven Business Analyst with strong analytical mindset and technical background.
+Experienced in translating business requirements into data solutions. Proficient in
+SQL, Python, and business intelligence tools. Passionate about data storytelling and
+driving organizational growth through insights. Quick problem solver with strong
+attention to detail.
+
+
+================================================================================
+PROFESSIONAL EXPERIENCE
+================================================================================
+
+Business Data Analyst | FinTech Solutions India | Mar 2023 - Present (1.3 years)
+• Analyze financial transaction data (100M+ records) to identify trends and anomalies
+• Write complex SQL queries for data extraction and reporting
+• Create interactive Tableau dashboards for executive leadership
+• Perform statistical analysis to support A/B testing initiatives
+• Automated monthly reporting using Python and Excel VBA, saving 15 hours/week
+
+Data Analytics Trainee | Analytics Academy Bootcamp | Jan 2023 - Feb 2023 (2 months)
+• Completed intensive 8-week data analytics bootcamp
+• Mastered Python, SQL, Excel, Tableau, and Power BI
+• Completed capstone project analyzing e-commerce customer data
+• Worked on real-world datasets and case studies
+
+
+================================================================================
+TECHNICAL SKILLS
+================================================================================
+
+Programming & Databases:
+  • Python (Intermediate): Pandas, NumPy, data cleaning, exploratory analysis
+  • SQL (Advanced): SELECT, WHERE, JOINs, subqueries, query optimization
+  • Excel (Advanced): Pivot tables, VLOOKUP, advanced formulas, data modeling
+  • Data Processing with Python and SQL
+
+Business Intelligence & Visualization:
+  • Tableau (Intermediate): Dashboard creation, data source connections, visualizations
+  • Power BI (Beginner): Basic dashboard creation, DAX formulas
+  • Data storytelling and business reporting
+
+Analytics & Statistics:
+  • Data Analysis: Exploratory data analysis, data validation, insights generation
+  • Statistics (Beginner): Descriptive statistics, basic hypothesis testing
+  • Business Analytics methodology and frameworks
+
+Tools & Platforms:
+  • Database: PostgreSQL, MySQL
+  • Version Control: Git, GitHub
+  • IDEs: Jupyter Notebook, VS Code, Excel
+
+
+================================================================================
+EDUCATION
+================================================================================
+
+Bachelor of Science in Mathematics | University of Mumbai | 2018 - 2022
+Specialization: Statistics | GPA: 3.7/4.0
+
+Data Analytics Bootcamp | Analytics Academy | Jan 2023 - Feb 2023
+(8-week intensive program covering Python, SQL, Excel, Tableau, Power BI)
+
+
+================================================================================
+PROJECTS & CASE STUDIES
+================================================================================
+
+E-Commerce Customer Analysis (Python + SQL + Tableau):
+• Analyzed 50K+ customer transactions to segment customer base
+• Built Python scripts for data cleaning and transformation
+• Extracted data using complex SQL queries
+• Created Tableau dashboard showing customer lifetime value
+• Key Finding: Identified high-value customer segments, 25% improvement potential
+
+Financial Data Analytics (SQL + Excel):
+• Analyzed quarterly financial reports for FinTech company
+• Created Excel dashboards with pivot tables and automated reporting
+• Used SQL for complex financial data extraction and aggregation
+• Supported decision-making for $5M+ budgeting process
+
+Sales Performance Dashboard (Excel + Power BI):
+• Developed interactive sales dashboard tracking 100+ metrics
+• Created data models using Excel and Power BI
+• Implemented drill-down capabilities for regional analysis
+• Reduced reporting time from 3 days to 1 hour
+
+
+================================================================================
+CERTIFICATIONS
+================================================================================
+
+• Google Data Analytics Professional Certificate | 2023
+• Microsoft Excel Advanced Certificate | 2023
+• Tableau Desktop Specialist (in progress)
+
+
+================================================================================
+SKILLS MATRIX
+================================================================================
+
+Data Analysis:           ████████░░ (8/10)
+Python:                 ██████░░░░ (6/10)
+SQL:                    █████████░ (9/10)
+Excel/VBA:              ████████░░ (8/10)
+Tableau:                ███████░░░ (7/10)
+Power BI:               █████░░░░░ (5/10)
+Statistical Analysis:   ██████░░░░ (6/10)
+Business Communication: ████████░░ (8/10)
+
+================================================================================

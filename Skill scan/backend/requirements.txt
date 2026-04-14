@@ -1,0 +1,8 @@
+# Backend Database Setup - Requirements
+
+SQLAlchemy==2.0.23
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+psycopg2-binary==2.9.9  # PostgreSQL adapter
+python-dotenv==1.0.0
+werkzeug==3.0.1

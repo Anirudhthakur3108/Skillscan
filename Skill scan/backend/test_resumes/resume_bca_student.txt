@@ -1,0 +1,150 @@
+================================================================================
+                          ALICE CODE - RESUME
+================================================================================
+
+Email: alice.code@email.com | Phone: +91-98765-12345 | GitHub: github.com/alicecode
+LinkedIn: linkedin.com/in/alicecode | Location: Hyderabad, India
+
+================================================================================
+PROFESSIONAL SUMMARY
+================================================================================
+
+Passionate Full-Stack Developer and Computer Science graduate with 1+ year of
+internship experience building scalable web applications. Proficient in modern
+programming languages and web frameworks. Strong foundation in data structures,
+algorithms, and system design. Quick learner with demonstrated ability to deliver
+production-quality code.
+
+
+================================================================================
+PROFESSIONAL EXPERIENCE
+================================================================================
+
+Full-Stack Developer Intern | TechStartup Labs | Jun 2023 - Jul 2024 (13 months)
+• Developed and deployed 5+ full-stack web applications using JavaScript, React,
+  and Node.js serving 10K+ daily active users
+• Implemented RESTful APIs and optimized database queries using SQL and PostgreSQL
+• Built responsive UI components using React with Hooks and State Management
+• Implemented responsive HTML/CSS designs with 95%+ cross-browser compatibility
+• Collaborated with team using Git, contributing to 100+ pull requests
+• Optimized web application performance, reducing load time by 40%
+
+Web Development Intern | CodeHub Solutions | Jan 2023 - May 2023 (5 months)
+• Developed backend services using JavaScript/Node.js for e-commerce platform
+• Wrote efficient SQL queries and designed database schemas following normalization
+• Participated in code reviews and improved code quality across team
+• Implemented HTTP/REST APIs and integrated third-party payment gateways
+
+
+================================================================================
+TECHNICAL SKILLS
+================================================================================
+
+Programming Languages:
+  • Python (Advanced): OOP, Web Development, Testing, Decorators, Async/Await
+  • Java (Intermediate): OOP, Collections, Exception Handling, Multithreading
+  • JavaScript (Proficient): ES6+, DOM manipulation, Async/Await, Events, APIs
+  • C++ (Beginner): Pointers, Memory Management, STL, Basic OOP
+
+Frontend Development:
+  • React (Intermediate): Hooks, State Management, Component Design, Routing
+  • HTML/CSS (Advanced): Semantic HTML, Responsive Design, Flexbox, Grid
+  • JavaScript frameworks: React, basic understanding of Vue.js
+  • UI/UX principles and design patterns
+
+Backend Development:
+  • Node.js & Express.js (Intermediate): RESTful API development
+  • Web Development Concepts: HTTP/REST, Deployment, Docker basics
+  • Backend frameworks and concepts
+
+Databases & Data Management:
+  • SQL/Databases (Proficient): Database design, normalization, query optimization
+  • PostgreSQL, MySQL, MongoDB
+  • Relational and non-relational databases
+  • Indexing and transaction management
+
+Core Computer Science:
+  • Data Structures & Algorithms (Intermediate): Arrays, Linked Lists, Trees, Graphs
+  • Sorting/Searching algorithms, Complexity analysis
+  • System Design basics: Microservices, Caching concepts
+  • Design Patterns: Singleton, Factory, Observer
+
+Tools & Technologies:
+  • Version Control: Git, GitHub
+  • IDEs: VS Code, IntelliJ, PyCharm
+  • Deployment: Heroku, AWS basics, Docker
+  • Testing: Jest, Mocha, Unit testing
+
+
+================================================================================
+EDUCATION
+================================================================================
+
+Bachelor of Technology in Computer Science | Manipal University | 2020 - 2024
+GPA: 3.6/4.0 | Expected Graduation: June 2024
+Relevant Coursework:
+  • Data Structures and Algorithms (A)
+  • Database Management Systems (A-)
+  • Object-Oriented Programming (A)
+  • Web Development and Internet Technologies (A)
+  • Operating Systems (B+)
+  • Software Engineering (A-)
+
+
+================================================================================
+PROJECTS & ACHIEVEMENTS
+================================================================================
+
+E-Commerce Platform (React + Node.js + PostgreSQL):
+• Built full-stack e-commerce application with 20+ product pages
+• Implemented user authentication, shopping cart, and payment integration
+• Used React for interactive UI, Node.js for backend APIs
+• Database design with proper normalization and SQL optimization
+• Features: 500+ SKUs, user reviews, order tracking
+• GitHub: github.com/alicecode/ecommerce-platform
+
+Task Management Dashboard (React + JavaScript + REST APIs):
+• Developed task management web application with real-time updates
+• Implemented responsive design using HTML/CSS with mobile-first approach
+• Integrated with RESTful backend APIs for CRUD operations
+• Features: Task filtering, deadline tracking, team collaboration
+• Deployed to Heroku; Handles 100+ concurrent users
+
+Data Processing Tool (Python + SQL):
+• Created Python script processing and analyzing 5M+ records
+• Optimized SQL queries for efficient data extraction and aggregation
+• Implemented data validation and error handling
+• Performance improvement: Reduced processing time by 50%
+
+Personal Portfolio Website:
+• Responsive portfolio showcasing projects and skills
+• JavaScript DOM manipulation for interactive elements
+• Clean, modern design with CSS animations
+• SEO optimized and deployed to AWS
+
+
+================================================================================
+CERTIFICATIONS & ACHIEVEMENTS
+================================================================================
+
+• AWS Certified Cloud Practitioner | Expected: Q2 2024
+• Oracle Certified Associate Java Programmer (in progress)
+• GitHub Advanced Certificate | 2023
+• Algorithm Mastery Course | HackerRank | 2023
+• Web Development Bootcamp Certificate | Udemy | 2023
+
+Achievements:
+  • Ranked in top 10% of class in Data Structures (8 out of 150 students)
+  • Won "Best Team Project" award for E-Commerce Platform (2024)
+  • Consistent Dean's List Scholar (3 semesters)
+
+
+================================================================================
+LANGUAGES
+================================================================================
+
+• English (Fluent)
+• Hindi (Native)
+• Kannada (Conversational)
+
+================================================================================
