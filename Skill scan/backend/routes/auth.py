@@ -7,7 +7,8 @@ import logging
 import re
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError
-from models import Student, db
+from models import Student
+from database import DatabaseManager
 from utils.auth import (
     hash_password,
     verify_password,
@@ -85,6 +86,7 @@ def register():
     Returns:
         JSON: {token, user_id, full_name, user_type, message}
     """
+    session = DatabaseManager.get_session()
     try:
         data = request.get_json()
         
@@ -151,7 +153,7 @@ def register():
             }), 400
         
         # Check if email already exists
-        existing_user = Student.query.filter_by(email=email).first()
+        existing_user = session.query(Student).filter_by(email=email).first()
         if existing_user:
             logger.warning(f"Registration: Email already exists - {email}")
             return jsonify({
@@ -171,8 +173,8 @@ def register():
             user_type=user_type
         )
         
-        db.session.add(new_user)
-        db.session.commit()
+        session.add(new_user)
+        session.commit()
         
         # Generate token
         token = generate_jwt_token(new_user.id, new_user.email)
@@ -189,24 +191,24 @@ def register():
             'email': new_user.email,
             'user_type': new_user.user_type
         }), 201
-    
     except IntegrityError as e:
-        db.session.rollback()
+        session.rollback()
         logger.error(f"Database integrity error during registration: {str(e)}")
         return jsonify({
             'status': 'error',
             'code': 409,
             'message': 'Email already registered'
         }), 409
-    
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         logger.error(f"Unexpected error during registration: {str(e)}")
         return jsonify({
             'status': 'error',
             'code': 500,
             'message': 'Internal server error'
         }), 500
+    finally:
+        session.close()
 
 
 @auth_bp.route('/login', methods=['POST'])
@@ -223,6 +225,7 @@ def login():
     Returns:
         JSON: {token, user_id, email, full_name, user_type, message}
     """
+    session = DatabaseManager.get_session()
     try:
         data = request.get_json()
         
@@ -248,7 +251,7 @@ def login():
             }), 400
         
         # Find user by email
-        user = Student.query.filter_by(email=email).first()
+        user = session.query(Student).filter_by(email=email).first()
         
         if not user:
             logger.warning(f"Login: User not found - {email}")
@@ -282,7 +285,6 @@ def login():
             'full_name': user.full_name,
             'user_type': user.user_type
         }), 200
-    
     except Exception as e:
         logger.error(f"Unexpected error during login: {str(e)}")
         return jsonify({
@@ -290,6 +292,8 @@ def login():
             'code': 500,
             'message': 'Internal server error'
         }), 500
+    finally:
+        session.close()
 
 
 @auth_bp.route('/logout', methods=['POST'])
@@ -312,7 +316,6 @@ def logout(current_user):
             'code': 200,
             'message': 'Logged out successfully'
         }), 200
-    
     except Exception as e:
         logger.error(f"Unexpected error during logout: {str(e)}")
         return jsonify({
@@ -333,12 +336,13 @@ def verify(current_user):
     Returns:
         JSON: {user_id, email, valid}
     """
+    session = DatabaseManager.get_session()
     try:
         user_id = current_user.get('user_id')
         email = current_user.get('username')  # username field contains email
         
         # Verify user still exists in database
-        user = Student.query.get(user_id)
+        user = session.get(Student, user_id)
         if not user:
             logger.warning(f"Token verification: User not found - ID {user_id}")
             return jsonify({
@@ -356,7 +360,6 @@ def verify(current_user):
             'email': email,
             'valid': True
         }), 200
-    
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {str(e)}")
         return jsonify({
@@ -364,3 +367,5 @@ def verify(current_user):
             'code': 500,
             'message': 'Internal server error'
         }), 500
+    finally:
+        session.close()
