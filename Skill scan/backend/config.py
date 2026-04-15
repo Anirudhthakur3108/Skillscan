@@ -34,6 +34,38 @@ class Config:
     
     # CORS
     CORS_ORIGINS = [os.getenv('REACT_APP_URL', 'http://localhost:3000')]
+    
+    # Assessment Configuration
+    ASSESSMENT_CONFIG = {
+        'mcq': {
+            'duration': int(os.getenv('ASSESSMENT_MCQ_DURATION', 360)),  # 6 minutes
+            'questions': int(os.getenv('ASSESSMENT_MCQ_QUESTIONS', 5))
+        },
+        'coding': {
+            'duration': int(os.getenv('ASSESSMENT_CODING_DURATION', 3600)),  # 60 minutes
+            'questions': int(os.getenv('ASSESSMENT_CODING_QUESTIONS', 2))
+        },
+        'case_study': {
+            'duration': int(os.getenv('ASSESSMENT_CASESTUDY_DURATION', 1800)),  # 30 minutes
+            'questions': int(os.getenv('ASSESSMENT_CASESTUDY_QUESTIONS', 1))
+        }
+    }
+    
+    # Assessment Scoring
+    ASSESSMENT_PASSING_SCORE = int(os.getenv('ASSESSMENT_PASSING_SCORE', 70))
+    ASSESSMENT_UNLOCK_THRESHOLD = int(os.getenv('ASSESSMENT_UNLOCK_THRESHOLD', 70))
+    
+    # Badge Mapping (score ranges)
+    ASSESSMENT_BADGE_MAPPING = {
+        'excellent': (90, 100),
+        'good': (80, 89),
+        'fair': (70, 79),
+        'needs_work': (0, 69)
+    }
+    
+    # Allowed difficulty levels
+    ASSESSMENT_DIFFICULTIES = ['easy', 'medium', 'hard']
+    ASSESSMENT_TYPES = ['mcq', 'coding', 'case_study']
 
 
 class DevelopmentConfig(Config):

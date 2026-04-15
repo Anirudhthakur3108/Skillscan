@@ -110,6 +110,7 @@ def register_blueprints(app):
     from routes.assessments import assessments_bp
     from routes.results import results_bp
     from routes.learning_plans import learning_plans_bp
+    from routes.gap_analysis import gap_analysis_bp
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -118,6 +119,7 @@ def register_blueprints(app):
     app.register_blueprint(assessments_bp, url_prefix='/api/assessments')
     app.register_blueprint(results_bp, url_prefix='/api/results')
     app.register_blueprint(learning_plans_bp, url_prefix='/api/learning-plans')
+    app.register_blueprint(gap_analysis_bp, url_prefix='/api/gap-analysis')
     
     app.logger.info('All blueprints registered')
 

@@ -3,6 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Assessment from './pages/Assessment';
+import AssessmentResults from './pages/AssessmentResults';
+import { Dashboard } from './pages/Dashboard';
+import { GapAnalysis } from './pages/GapAnalysis';
+import { LearningPlan } from './pages/LearningPlan';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 interface ProtectedRouteProps {
@@ -59,6 +64,51 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/gap-analysis"
+          element={
+            <ProtectedRoute>
+              <GapAnalysis />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/learning-plan"
+          element={
+            <ProtectedRoute>
+              <LearningPlan />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assessment"
+          element={
+            <ProtectedRoute>
+              <Assessment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assessment-results"
+          element={
+            <ProtectedRoute>
+              <AssessmentResults />
             </ProtectedRoute>
           }
         />
