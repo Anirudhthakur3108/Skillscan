@@ -13,3 +13,4 @@ bcrypt==5.0.0
 requests==2.31.0
 # Optional WSGI server for Windows/dev (production typically uses gunicorn)
 waitress==3.0.2
+flask-cors
