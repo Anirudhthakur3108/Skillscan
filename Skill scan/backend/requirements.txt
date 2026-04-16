@@ -1,8 +1,15 @@
-# Backend Database Setup - Requirements
-
+# Backend dependencies (production-ready)
+gunicorn>=20.1.0
+# Google Gemini / GenAI client (optional - required only if using AI features)
+google-genai==1.73.1
 SQLAlchemy==2.0.23
 Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.9  # PostgreSQL adapter
 python-dotenv==1.0.0
 werkzeug==3.0.1
+PyJWT==2.12.1
+bcrypt==5.0.0
+requests==2.31.0
+# Optional WSGI server for Windows/dev (production typically uses gunicorn)
+waitress==3.0.2
