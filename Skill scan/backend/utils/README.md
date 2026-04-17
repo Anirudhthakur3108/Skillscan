@@ -17,12 +17,12 @@ pip install -r utils/requirements.txt
 Create a `.env` file in the backend directory:
 
 ```env
-GEMINI_API_KEY=AIzaSyB9P_6sQDLh4bZYoFy_Fm3rSySaXdU7grw
+GEMINI_API_KEY=your API key
 ```
 
 Or set environment variable:
 ```bash
-export GEMINI_API_KEY="AIzaSyB9P_6sQDLh4bZYoFy_Fm3rSySaXdU7grw"
+export GEMINI_API_KEY=your API key
 ```
 
 ### 3. Run Tests
