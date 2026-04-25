@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #002045;
+  --color-primary-container: #1a365d;
+  --color-secondary: #0051d5;
+  --color-secondary-container: #316bf3;
+  --color-tertiary: #002618;
+  --color-tertiary-container: #003e29;
+  --color-emerald: #10B981;
+  --color-background: #f7f9fb;
+  --color-surface: #f7f9fb;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container-lowest: #ffffff;
+  --color-outline-variant: rgba(196, 198, 207, 0.2);
+  
+  --font-display: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--color-outline-variant);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-primary font-body antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-extrabold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-white font-semibold rounded-md transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-900/10;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-secondary text-white font-semibold rounded-md transition-all hover:bg-blue-700 active:scale-[0.98];
+  }
+  
+  .input-underline {
+    @apply w-full bg-surface-container-low border-b-2 border-primary px-4 py-3 outline-none transition-all focus:border-secondary focus:bg-white;
+  }
+  
+  .card-tonal {
+    @apply bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant;
+  }
+
+  .badge-skill {
+    @apply glass px-4 py-1 rounded-full text-sm font-medium text-primary flex items-center gap-2;
+  }
+}
+
+/* Custom Utilities */
+.tracking-editorial {
+  letter-spacing: -0.02em;
+}
+
+.shadow-ambient {
+  box-shadow: 0px 8px 32px rgba(25, 28, 30, 0.06);
+}

@@ -1,0 +1,87 @@
+# ─── Python bytecode ─────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ─── Virtual environments ───────────────────────
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# ─── Environment variables ──────────────────────
+.env
+.env.*
+
+# ─── Distribution / packaging ───────────────────
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ─── Logs & databases ───────────────────────────
+*.log
+*.sqlite3
+*.db
+
+# ─── Unit test / coverage reports ───────────────
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+
+# ─── Jupyter Notebook ───────────────────────────
+.ipynb_checkpoints/
+
+# ─── IDEs / Editors ─────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ─── OS files ───────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── FastAPI / Uvicorn ──────────────────────────
+*.pid
+*.sock
+
+# ─── Mistral / API keys ─────────────────────────
+*.env
+secrets.json
+
+# ─── MyPy / type checking ───────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ─── Pyre type checker ──────────────────────────
+.pyre/
+
+# ─── Ruff / linting ─────────────────────────────
+.ruff_cache/
+
+# ─── PyInstaller ────────────────────────────────
+*.manifest
+*.spec
+
+# ─── Coverage / reports ─────────────────────────
+coverage.xml
+*.cover
+*.py,cover
