@@ -1,9 +1,8 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LearningPlan from '../pages/LearningPlan';
-import * as AuthContext from '../context/AuthContext';
+// React import not required with automatic JSX runtime
 import apiClient from '../api/client';
 
 // Mock the API client

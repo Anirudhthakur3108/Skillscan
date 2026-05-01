@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUpload, FaCircleCheck, FaArrowRight, FaSpinner, FaMicrochip, FaFont, FaPlus, FaX, FaGlobe, FaTerminal, FaTrashCan } from 'react-icons/fa6';
+import { FaUpload, FaCircleCheck, FaArrowRight, FaSpinner, FaMicrochip, FaFont, FaPlus, FaX, FaGlobe, FaTrashCan } from 'react-icons/fa6';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import * as pdfjs from 'pdfjs-dist';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaCircleExclamation, FaBolt, FaArrowUpRightFromSquare, FaSpinner, FaShieldHalved, FaMap, FaTable, FaDownLeftAndUpRightToCenter } from 'react-icons/fa6';
+import { FaCircleExclamation, FaBolt, FaArrowUpRightFromSquare, FaSpinner, FaShieldHalved, FaMap, FaTable } from 'react-icons/fa6';
 import apiClient from '../api/client';
 
 const Results: React.FC = () => {
@@ -11,7 +11,7 @@ const Results: React.FC = () => {
   const [assessment, setAssessment] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [learningPlanData, setLearningPlanData] = useState<any>(null);
+  const [learningPlanData] = useState<any>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [skillScoreId, setSkillScoreId] = useState<number | null>(null);
   const [studyCompleted, setStudyCompleted] = useState(false);
@@ -166,9 +166,7 @@ const Results: React.FC = () => {
   const caseStudyFeedback = aiFeedback.case_study_feedback || {};
   const identifiedGaps = aiFeedback.identified_gaps || [];
   
-  // For backwards compatibility
-  const strengths = aiFeedback.strengths || [];
-  const weaknesses = aiFeedback.weaknesses || [];
+  // For backwards compatibility (unused arrays removed to avoid TS no-unused errors)
 
   return (
     <div className="container mx-auto px-6 py-12 max-w-5xl space-y-16">
