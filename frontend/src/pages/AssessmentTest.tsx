@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
-  ChevronRight, 
-  BrainCircuit, 
-  Timer, 
-  CheckCircle2, 
-  Loader2, 
-  Info,
-  ArrowLeft,
-  Clock,
-  AlertCircle
-} from 'lucide-react';
+  FaClock,
+  FaSpinner, 
+  FaArrowLeft,
+  FaCircleExclamation,
+  FaCircleCheck,
+} from 'react-icons/fa6';
 import apiClient from '../api/client';
-import { useAuth } from '../context/AuthContext';
+import { LuBrainCircuit } from 'react-icons/lu';
 
 interface Question {
   id: string;
@@ -27,6 +23,9 @@ interface AssessmentData {
   assessment_id: number;
   skill_name: string;
   status: string;
+  difficulty?: number;
+  num_questions?: number;
+  time_limit_minutes?: number;
   questions: {
     mcq?: Question[];
     coding?: any[];
@@ -37,7 +36,6 @@ interface AssessmentData {
 const AssessmentTest: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   
   const assessmentId = searchParams.get('assessment_id');
   
@@ -47,7 +45,7 @@ const AssessmentTest: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
+  const [timeRemaining, setTimeRemaining] = useState(1800); // Default 30 minutes
   
   // Track answers
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -88,10 +86,17 @@ const AssessmentTest: React.FC = () => {
           return;
         }
         
+        // Set initial time based on time_limit_minutes
+        const initialTime = (data.time_limit_minutes || 30) * 60;
+        setTimeRemaining(initialTime);
+        
         setAssessment({
           assessment_id: data.assessment_id,
           skill_name: data.skill_name,
           status: data.status,
+          difficulty: data.difficulty,
+          num_questions: data.num_questions,
+          time_limit_minutes: data.time_limit_minutes,
           questions: data.questions || { mcq: [] }
         });
       } catch (err: any) {
@@ -146,8 +151,17 @@ const AssessmentTest: React.FC = () => {
     setError(null);
     try {
       const response = await apiClient.post(`/assessments/${assessmentId}/submit`, {
-        student_answers: answers
+        student_answers: {
+          mcq: answers,
+          coding: {},
+          case_study: {}
+        }
       });
+      
+      // Store skill_score_id for use in Results page
+      if (response.data.skill_score_id) {
+        localStorage.setItem(`skillScoreId_${assessmentId}`, response.data.skill_score_id.toString());
+      }
       
       navigate(`/results?assessment_id=${assessmentId}`, {
         state: { scoreData: response.data }
@@ -173,7 +187,7 @@ const AssessmentTest: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="text-center space-y-4">
-          <Loader2 size={48} className="animate-spin text-primary mx-auto" />
+          <FaSpinner size={48} className="animate-spin text-primary mx-auto" />
           <p className="text-foreground-muted font-medium">Loading assessment...</p>
         </div>
       </div>
@@ -184,7 +198,7 @@ const AssessmentTest: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="glass p-8 rounded-3xl border border-red-500/20 max-w-md text-center space-y-4">
-          <AlertCircle size={40} className="text-red-500 mx-auto" />
+          <FaCircleExclamation size={40} className="text-red-500 mx-auto" />
           <h2 className="text-xl font-bold text-red-400">Error Loading Assessment</h2>
           <p className="text-foreground-muted">{error}</p>
           <button 
@@ -215,13 +229,13 @@ const AssessmentTest: React.FC = () => {
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-2 px-4 py-2 glass rounded-xl border border-white/10 hover:border-white/20 transition-all"
           >
-            <ArrowLeft size={18} />
+            <FaArrowLeft size={18} />
             Exit
           </button>
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 glass rounded-xl border border-white/10">
-              <BrainCircuit size={18} className="text-primary" />
+              <LuBrainCircuit size={18} className="text-primary" />
               <span className="font-bold text-sm">{assessment.skill_name}</span>
             </div>
             
@@ -232,7 +246,7 @@ const AssessmentTest: React.FC = () => {
                 ? 'border-yellow-500/50 bg-yellow-500/5'
                 : 'border-white/10'
             } transition-all`}>
-              <Clock size={18} className={isTimeCritical ? 'text-red-500' : isTimeWarning ? 'text-yellow-500' : 'text-primary'} />
+              <FaClock size={18} className={isTimeCritical ? 'text-red-500' : isTimeWarning ? 'text-yellow-500' : 'text-primary'} />
               <span className={`font-mono font-bold ${isTimeCritical ? 'text-red-500' : isTimeWarning ? 'text-yellow-500' : ''}`}>
                 {formatTime(timeRemaining)}
               </span>
@@ -243,7 +257,7 @@ const AssessmentTest: React.FC = () => {
         {/* Error Message */}
         {error && (
           <div className="glass p-4 rounded-2xl border border-red-500/20 bg-red-500/5 flex items-start gap-3 mb-6">
-            <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <FaCircleExclamation size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-red-400 font-bold text-sm">{error}</p>
             </div>
@@ -318,7 +332,7 @@ const AssessmentTest: React.FC = () => {
                       : 'border-white/30 group-hover:border-white/50'
                   }`}>
                     {answers[currentQuestion.id] === option.id && (
-                      <CheckCircle2 size={20} className="text-white" />
+                      <FaCircleCheck size={20} className="text-white" />
                     )}
                   </div>
                   <span className="font-semibold text-lg">{option.text}</span>
@@ -351,13 +365,13 @@ const AssessmentTest: React.FC = () => {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <FaSpinner size={18} className="animate-spin" />
                     Submitting...
                   </>
                 ) : (
                   <>
                     Submit Assessment
-                    <CheckCircle2 size={18} />
+                    <FaCircleCheck size={18} />
                   </>
                 )}
               </button>
@@ -400,3 +414,4 @@ const AssessmentTest: React.FC = () => {
 };
 
 export default AssessmentTest;
+

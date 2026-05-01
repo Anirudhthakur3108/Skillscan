@@ -85,3 +85,7 @@ dmypy.json
 coverage.xml
 *.cover
 *.py,cover
+
+# ─── Local Outputs ─────────────────────────────
+*output*.txt
+start_server.ps1

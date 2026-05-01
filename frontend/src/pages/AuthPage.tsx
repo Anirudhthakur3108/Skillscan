@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Mail, Lock, GraduationCap, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {  FaUserPlus, FaEnvelope, FaLock, FaGraduationCap, FaSpinner } from 'react-icons/fa6';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
+import { FaSignInAlt } from 'react-icons/fa';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,7 +13,17 @@ const AuthPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  // Check URL path to determine if we should show login or register form
+  useEffect(() => {
+    if (location.pathname === '/register') {
+      setIsLogin(false);
+    } else if (location.pathname === '/login') {
+      setIsLogin(true);
+    }
+  }, [location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +67,7 @@ const AuthPage: React.FC = () => {
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         <div className="text-center mb-10 space-y-2">
           <div className="inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-4">
-            <GraduationCap size={32} />
+            <FaGraduationCap size={32} />
           </div>
           <h2 className="text-3xl font-bold tracking-tight">
             {isLogin ? 'Welcome Back' : 'Define Your Legacy'}
@@ -80,7 +91,7 @@ const AuthPage: React.FC = () => {
                 <label className="text-sm font-semibold ml-1">Full Name</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                    <UserPlus size={18} />
+                    <FaUserPlus size={18} />
                   </div>
                   <input
                     type="text"
@@ -98,7 +109,7 @@ const AuthPage: React.FC = () => {
               <label className="text-sm font-semibold ml-1">Academic Email</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                  <Mail size={18} />
+                  <FaEnvelope size={18} />
                 </div>
                 <input
                   type="email"
@@ -122,7 +133,7 @@ const AuthPage: React.FC = () => {
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                  <Lock size={18} />
+                  <FaLock size={18} />
                 </div>
                 <input
                   type="password"
@@ -141,11 +152,11 @@ const AuthPage: React.FC = () => {
               className="w-full py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <Loader2 size={20} className="animate-spin" />
+                <FaSpinner size={20} className="animate-spin" />
               ) : isLogin ? (
-                <>Sign In <LogIn size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                <>Sign In <FaSignInAlt size={20} className="group-hover:translate-x-1 transition-transform" /></>
               ) : (
-                <>Create Account <UserPlus size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                <>Create Account <FaUserPlus size={20} className="group-hover:translate-x-1 transition-transform" /></>
               )}
             </button>
           </form>
@@ -177,3 +188,4 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
+

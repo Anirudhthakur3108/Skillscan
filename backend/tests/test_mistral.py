@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from mistralai.client import Mistral
+from mistralai.client import MistralClient as Mistral
 
 load_dotenv()
 
@@ -12,7 +12,7 @@ else:
     print(f"STATUS: API Key found (starts with: {api_key[:4]}...)")
     client = Mistral(api_key=api_key)
     try:
-        response = client.chat.complete(
+        response = client.chat(
             model="mistral-small-latest",
             messages=[{"role": "user", "content": "Say 'API Working'"}],
             max_tokens=10

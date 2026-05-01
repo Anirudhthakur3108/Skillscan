@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  CheckCircle, 
-  BookOpen, 
-  User, 
-  HelpCircle, 
-  LogOut, 
-  Trophy, 
-  ArrowRight,
-  TrendingUp,
-  FileText,
-  Loader2
-} from 'lucide-react';
+  FaTrophy, 
+  FaArrowRight,
+  FaSpinner,
+  FaCircleCheck
+} from 'react-icons/fa6';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
+import { FiFileText } from 'react-icons/fi';
+import { BiTrendingUp } from 'react-icons/bi';
 
 interface Assessment {
   assessment_id: number;
@@ -22,15 +17,24 @@ interface Assessment {
   category: string;
   status: string;
   score: number | null;
-  gap_identified: string | null;
+  gap_identified: boolean | null;
   created_at: string;
 }
 
+interface StudentSkill {
+  id: number;
+  skill_id: number;
+  skill_name: string;
+  category: string;
+  proficiency_claimed: number | null;
+  difficulty_configured: number | null;
+}
+
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [skills, setSkills] = useState<any[]>([]);
+  const [skills, setSkills] = useState<StudentSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingFor, setGeneratingFor] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,13 +58,10 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, [user]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
-  const handleGenerateAssessment = async (skillId: number) => {
-    setGeneratingFor(skillId);
+
+  const handleGenerateAssessment = async (skill: StudentSkill) => {
+    setGeneratingFor(skill.skill_id);
     setError(null);
     try {
       if (!user?.id) {
@@ -69,9 +70,17 @@ const Dashboard: React.FC = () => {
         return;
       }
 
+      if (!skill.difficulty_configured || !skill.proficiency_claimed) {
+        setError(`Configure difficulty and proficiency for ${skill.skill_name} before assessment.`);
+        setGeneratingFor(null);
+        return;
+      }
+
       const res = await apiClient.post('/assessments/generate', {
         student_id: user.id,
-        skill_id: skillId
+        skill_id: skill.skill_id,
+        difficulty: skill.difficulty_configured,
+        proficiency_claimed: skill.proficiency_claimed,
       });
       
       if (res.data.assessment_id) {
@@ -94,6 +103,9 @@ const Dashboard: React.FC = () => {
   // Find skills that don't have an assessment yet
   const assessedSkillIds = new Set(assessments.map(a => a.skill_name));
   const pendingSkills = skills.filter(s => !assessedSkillIds.has(s.skill_name));
+  const unconfiguredPendingSkills = pendingSkills.filter(
+    (skill) => !skill.difficulty_configured || !skill.proficiency_claimed,
+  );
 
   return (
     <div className="py-6 lg:py-12">
@@ -109,14 +121,14 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate('/skills')}
               className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
             >
-              Add / Verify Skills <ArrowRight size={18} />
+              Add / Verify Skills <FaArrowRight size={18} />
             </button>
           </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-primary" size={48} />
+            <FaSpinner className="animate-spin text-primary" size={48} />
           </div>
         ) : (
           <>
@@ -151,7 +163,7 @@ const Dashboard: React.FC = () => {
                     onClick={() => navigate('/skills')}
                     className="text-sm font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2"
                   >
-                    View skill profile <ArrowRight size={14} />
+                    View skill profile <FaArrowRight size={14} />
                   </button>
                 </div>
               </div>
@@ -159,7 +171,7 @@ const Dashboard: React.FC = () => {
               <div className="glass rounded-3xl p-8 border border-white/10 flex flex-col justify-between items-center text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-emerald-500/5 opacity-50" />
                 <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2 relative z-10">
-                  <Trophy size={32} />
+                  <FaTrophy size={32} />
                 </div>
                 <div className="space-y-1 relative z-10">
                   <div className="text-3xl font-black">Level {Math.floor(completedAssessments.length / 3) + 1}</div>
@@ -178,7 +190,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 {assessments.length === 0 ? (
                   <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                    <FileText size={40} className="mx-auto opacity-20" />
+                    <FiFileText size={40} className="mx-auto opacity-20" />
                     <p className="font-medium">No assessments taken yet.</p>
                   </div>
                 ) : (
@@ -228,10 +240,17 @@ const Dashboard: React.FC = () => {
               <div className="space-y-12">
                 {/* Pending Skills to Assess */}
                 <div className="space-y-8">
-                  <h3 className="text-xl font-bold px-2">Skills to Verify</h3>
+                  <div className="px-2 space-y-2">
+                    <h3 className="text-xl font-bold">Skills to Verify</h3>
+                    {unconfiguredPendingSkills.length > 0 && (
+                      <p className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                        {unconfiguredPendingSkills.length} skills need configuration before assessment.
+                      </p>
+                    )}
+                  </div>
                   {pendingSkills.length === 0 ? (
                     <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                      <CheckCircle size={40} className="mx-auto opacity-20 text-emerald-500" />
+                      <FaCircleCheck size={40} className="mx-auto opacity-20 text-emerald-500" />
                       <p className="font-medium">All skills verified. Well done!</p>
                     </div>
                   ) : (
@@ -241,15 +260,28 @@ const Dashboard: React.FC = () => {
                           <div className="space-y-1">
                             <div className="font-bold group-hover:text-primary transition-colors">{item.skill_name}</div>
                             <div className="text-xs text-foreground-muted font-medium">{item.category}</div>
+                            {(!item.difficulty_configured || !item.proficiency_claimed) && (
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                Difficulty and proficiency setup required
+                              </div>
+                            )}
                           </div>
                           <div className="text-right">
                             <button 
-                              onClick={() => handleGenerateAssessment(item.id)}
-                              disabled={generatingFor === item.id}
-                              className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-sm font-bold hover:bg-primary text-white transition-all disabled:opacity-50 shadow-sm"
+                              onClick={() => handleGenerateAssessment(item)}
+                              disabled={generatingFor === item.skill_id || !item.difficulty_configured || !item.proficiency_claimed}
+                              className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-sm font-bold hover:bg-primary text-white transition-all disabled:opacity-50 disabled:hover:bg-primary/10 disabled:hover:text-primary shadow-sm"
                             >
-                              {generatingFor === item.id ? <Loader2 size={16} className="animate-spin inline" /> : 'Assess Now'}
+                              {generatingFor === item.skill_id ? <FaSpinner size={16} className="animate-spin inline" /> : 'Assess Now'}
                             </button>
+                            {(!item.difficulty_configured || !item.proficiency_claimed) && (
+                              <button
+                                onClick={() => navigate('/skills')}
+                                className="block mt-2 text-[10px] font-bold uppercase tracking-wider text-amber-400 hover:underline"
+                              >
+                                Configure Skill
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -262,7 +294,7 @@ const Dashboard: React.FC = () => {
                   <h3 className="text-xl font-bold px-2">Knowledge Gaps</h3>
                   {gaps.length === 0 ? (
                     <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                      <TrendingUp size={40} className="mx-auto opacity-20" />
+                      <BiTrendingUp size={40} className="mx-auto opacity-20" />
                       <p className="font-medium">No gaps identified. Keep it up!</p>
                     </div>
                   ) : (
@@ -276,7 +308,9 @@ const Dashboard: React.FC = () => {
                           <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5 group-hover:bg-white/10 transition-colors">
                             <div className="text-sm w-full">
                               <span className="text-foreground-muted block text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">AI Insight</span>
-                              <span className="font-medium text-sm line-clamp-2 leading-relaxed italic">"{item.gap_identified}"</span>
+                              <span className="font-medium text-sm line-clamp-2 leading-relaxed italic">
+                                {item.gap_identified ? "Gap identified from latest assessment" : "No gap identified"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -294,3 +328,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

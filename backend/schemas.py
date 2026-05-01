@@ -109,3 +109,74 @@ class AILearningPlanResponse(BaseModel):
     total_estimated_hours: int
     phases: List[LearningPhase]
     summary: str
+
+# ─── Enhanced Learning Plan with Resources ────────────────────────────────────
+
+class YouTubeResource(BaseModel):
+    title: str
+    url: str
+    duration_minutes: int
+
+class WebsiteResource(BaseModel):
+    title: str
+    url: str
+    category: str  # "tutorial", "documentation", "article", "practice"
+    estimated_hours: int
+
+class LearningPhaseEnhanced(BaseModel):
+    phase_number: int
+    title: str
+    description: str
+    timeline_weeks: int
+    focus_gaps: List[str]
+    youtube_resources: List[YouTubeResource]
+    website_resources: List[WebsiteResource]
+    milestones: List[str]
+
+class AILearningPlanResponseEnhanced(BaseModel):
+    """Enhanced learning plan with YouTube and website resources."""
+    skill_name: str
+    total_weeks: int
+    summary: str
+    phases: List[LearningPhaseEnhanced]
+
+# ─── Gap Analysis Response ─────────────────────────────────────────────────────
+
+class IdentifiedGap(BaseModel):
+    gap_name: str
+    severity: str  # "high", "medium", "low"
+    reason: str
+
+class AIGapAnalysisResponse(BaseModel):
+    """Gap analysis from reasoning model."""
+    identified_gaps: List[IdentifiedGap]
+    focus_areas: List[str]
+    improvement_potential: int  # 0-10
+
+# ─── Assessment Score Detail Response ──────────────────────────────────────────
+
+class MCQFeedbackItem(BaseModel):
+    question_id: str
+    correct: bool
+    feedback: str
+
+class MCQFeedback(BaseModel):
+    total: int
+    correct: int
+    percentage: int
+    items: List[MCQFeedbackItem]
+
+class LongAnswerFeedback(BaseModel):
+    score: int  # 0-10
+    feedback: str
+    strengths: List[str]
+    weaknesses: List[str]
+
+class AssessmentScoreDetailResponse(BaseModel):
+    """Detailed breakdown of assessment scores."""
+    assessment_id: int
+    mcq_feedback: MCQFeedback
+    long_answer_feedback: Optional[LongAnswerFeedback]
+    case_study_feedback: Optional[LongAnswerFeedback]
+    overall_score: int  # 0-10
+    identified_gaps: List[IdentifiedGap]

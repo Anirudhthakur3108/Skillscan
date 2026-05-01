@@ -5,6 +5,7 @@ from pydantic import ValidationError
 from extensions import db
 from models import Student
 from schemas import UserRegisterRequest, UserLoginRequest
+import uuid
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -13,33 +14,45 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     """POST /auth/register — Create a new student account."""
     try:
-        data = UserRegisterRequest.model_validate(request.get_json())
+        data = UserRegisterRequest.model_validate(request.get_json(silent=True) or {})
     except ValidationError as e:
         return jsonify({"error": "Validation failed", "details": e.errors()}), 400
 
-    # Check email uniqueness
-    if Student.query.filter_by(email=data.email).first():
-        return jsonify({"error": "Email already registered"}), 409
+    try:
+        # Check email uniqueness
+        existing_student = Student.query.filter_by(email=data.email).first()
+        if existing_student:
+            return jsonify({"error": "Email already registered"}), 409
 
-    student = Student(
-        email=data.email,
-        password_hash=generate_password_hash(data.password, method='pbkdf2:sha256'),
-        full_name=data.full_name,
-    )
-    db.session.add(student)
-    db.session.commit()
+        # Create new student with proper field handling
+        student = Student(
+            id=str(uuid.uuid4()),  # Explicitly set UUID
+            email=data.email,
+            password_hash=generate_password_hash(data.password, method='pbkdf2:sha256'),
+            full_name=data.full_name,
+            user_type='student'  # Default user type
+        )
+        db.session.add(student)
+        db.session.commit()
 
-    token = create_access_token(identity=str(student.id))
-    return jsonify({
-        "status": "success",
-        "message": "Account created successfully",
-        "access_token": token,
-        "student": {
-            "id": student.id,
-            "email": student.email,
-            "full_name": student.full_name,
-        }
-    }), 201
+        token = create_access_token(identity=str(student.id))
+        return jsonify({
+            "status": "success",
+            "message": "Account created successfully",
+            "access_token": token,
+            "student": {
+                "id": student.id,
+                "email": student.email,
+                "full_name": student.full_name or student.email,
+                "user_type": student.user_type
+            }
+        }), 201
+    except Exception as exc:
+        db.session.rollback()
+        # Log exception to console and return JSON 500 for client
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error", "message": str(exc)}), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
@@ -50,18 +63,24 @@ def login():
     except ValidationError as e:
         return jsonify({"error": "Validation failed", "details": e.errors()}), 400
 
-    student = Student.query.filter_by(email=data.email).first()
+    try:
+        student = Student.query.filter_by(email=data.email).first()
 
-    if not student or not check_password_hash(student.password_hash, data.password):
-        return jsonify({"error": "Invalid email or password"}), 401
+        if not student or not check_password_hash(student.password_hash or '', data.password):
+            return jsonify({"error": "Invalid email or password"}), 401
 
-    token = create_access_token(identity=str(student.id))
-    return jsonify({
-        "status": "success",
-        "access_token": token,
-        "student": {
-            "id": student.id,
-            "email": student.email,
-            "full_name": student.full_name,
-        }
-    }), 200
+        token = create_access_token(identity=str(student.id))
+        return jsonify({
+            "status": "success",
+            "access_token": token,
+            "student": {
+                "id": student.id,
+                "email": student.email,
+                "full_name": student.full_name or student.email,
+                "user_type": student.user_type
+            }
+        }), 200
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error", "message": str(exc)}), 500

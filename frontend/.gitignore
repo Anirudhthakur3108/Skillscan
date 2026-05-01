@@ -52,3 +52,7 @@ storybook-static/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# ─── Testing Outputs ───────────────────────────
+playwright-report/
+test-results/

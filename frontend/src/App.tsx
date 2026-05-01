@@ -8,6 +8,7 @@ import SkillInput from './pages/SkillInput';
 import Assessment from './pages/Assessment';
 import AssessmentTest from './pages/AssessmentTest';
 import Results from './pages/Results';
+import LearningPlan from './pages/LearningPlan';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ const App: React.FC = () => {
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/assessment-test" element={<AssessmentTest />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/learning-plan" element={<LearningPlan />} />
         </Routes>
       </Layout>
     </Router>

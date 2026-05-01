@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiClient from '../api/client';
 
 interface User {
   id: string;
@@ -26,11 +25,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem('token');
-      if (storedToken) {
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedToken && storedUser) {
         try {
-          // If we had a /me endpoint, we would fetch the user profile here.
-          // Since we don't, we can try to extract basic info from JWT or just rely on the token validity
-          // Let's decode the JWT payload safely
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setToken(storedToken);
+        } catch (error) {
+          console.error("Failed to parse stored user data", error);
+          logout();
+        }
+      } else if (storedToken) {
+        // Fallback: try to decode from JWT if user data not stored
+        try {
           const payloadBase64 = storedToken.split('.')[1];
           if (payloadBase64) {
             const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
@@ -54,12 +62,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (newToken: string, userData: User) => {
     localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
