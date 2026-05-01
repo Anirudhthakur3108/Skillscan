@@ -15,7 +15,8 @@ from ai_service import (
     generate_assessment, 
     score_assessment, 
     analyze_gaps,
-    generate_enhanced_learning_plan
+    generate_enhanced_learning_plan,
+    build_fallback_assessment_payload,
 )
 
 assessments_bp = Blueprint('assessments', __name__)
@@ -240,6 +241,25 @@ def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, profi
 
     # Deduplicate MCQs
     generated["mcq"] = _dedupe_mcqs(generated["mcq"])
+
+    # Guardrail: never persist or return an empty assessment.
+    # If AI generation or cached data produced no usable MCQs, fall back to
+    # a deterministic in-app question set so the assessment page always renders.
+    if len(generated["mcq"]) < num_questions:
+        fallback_payload = build_fallback_assessment_payload(skill_name, proficiency_claimed, num_questions)
+        fallback_mcq = _dedupe_mcqs(fallback_payload.get("mcq", []))
+        if len(generated["mcq"]) < num_questions:
+            existing_questions = {str(item.get("question", "")).strip().lower() for item in generated["mcq"]}
+            for item in fallback_mcq:
+                question_key = str(item.get("question", "")).strip().lower()
+                if question_key in existing_questions:
+                    continue
+                generated["mcq"].append(item)
+                existing_questions.add(question_key)
+                if len(generated["mcq"]) >= num_questions:
+                    break
+
+    generated["mcq"] = generated["mcq"][:num_questions]
 
     _save_to_question_bank(skill_id, generated, difficulty)
 

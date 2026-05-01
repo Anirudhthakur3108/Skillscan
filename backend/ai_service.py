@@ -217,6 +217,11 @@ def _fallback_assessment_payload(skill_name: str, claimed_proficiency: int, num_
     }
 
 
+def build_fallback_assessment_payload(skill_name: str, claimed_proficiency: int, num_questions: int) -> Dict:
+    """Public helper for a guaranteed non-empty assessment payload."""
+    return _fallback_assessment_payload(skill_name, claimed_proficiency, num_questions)
+
+
 def _normalize_assessment_payload(data: dict, skill_name: str, claimed_proficiency: int, num_questions: int) -> dict:
     # Deduplicate questions by normalized text and keep the first valid occurrence.
     deduped_mcq: List[Dict] = []
