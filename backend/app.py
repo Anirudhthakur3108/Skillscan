@@ -10,14 +10,29 @@ load_dotenv()
 
 jwt = JWTManager()
 
+
+def _parse_cors_origins() -> list[str]:
+    raw_origins = os.getenv('CORS_ORIGINS', '')
+    origins = [origin.strip() for origin in raw_origins.split(',') if origin.strip()]
+    if origins:
+        return origins
+    return [
+        'http://localhost:5173',
+        'http://localhost:4173',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:4173',
+    ]
+
 def create_app():
     app = Flask(__name__)
-    # Enable CORS with proper headers
-    CORS(app, 
-         resources={r"/*": {"origins": "*"}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    # Enable CORS for the frontend origins we explicitly allow.
+    CORS(
+        app,
+        resources={r"/*": {"origins": _parse_cors_origins()}},
+        supports_credentials=False,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    )
 
     # Database config — Use SUPABASE_URL for PostgreSQL connection
     # Falls back to SQLite for local development if SUPABASE_URL not set

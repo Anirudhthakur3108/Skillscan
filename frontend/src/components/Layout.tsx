@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { FaBell } from 'react-icons/fa6';
+import logo from '../assets/logo.png';
+import slogan from '../assets/slogan.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,12 +28,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-10">
             <Link to="/" className="flex items-center gap-4 group">
               <img
-                src="./src/assets/logo.png"
+                src={logo}
                 alt="SkillScan Symbol"
                 className="w-10 h-10 group-hover:scale-110 transition-transform"
               />
               <img
-                src="./src/assets/slogan.png"
+                src={slogan}
                 alt="SkillScan Title and Slogan"
                 className="h-10 object-contain hidden sm:block"
               />

@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5001', // Assuming Flask runs on port 5001
+  baseURL: apiBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
