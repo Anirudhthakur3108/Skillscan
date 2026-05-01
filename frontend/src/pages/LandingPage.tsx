@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo.png';
 import { FaGraduationCap, FaArrowRight, FaCircleCheck, FaMicrochip } from 'react-icons/fa6';
 import { useAuth } from '../context/AuthContext';
 import { BsArrowUpRight } from 'react-icons/bs';
@@ -197,7 +198,7 @@ const LandingPage: React.FC = () => {
           <div className="col-span-2 space-y-6">
             <div className="text-2xl font-black tracking-tighter flex items-center gap-2">
               <img
-                src="./src/assets/logo.png"
+                src={logo}
                 alt="SkillScan Symbol"
                 className="w-10 h-10 group-hover:scale-110 transition-transform"
               />
