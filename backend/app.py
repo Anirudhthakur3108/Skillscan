@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -11,13 +12,25 @@ load_dotenv()
 jwt = JWTManager()
 
 
-def _parse_cors_origins() -> list[str]:
+def _parse_cors_origins() -> list[object]:
     raw_origins = os.getenv('CORS_ORIGINS', '')
-    origins = [origin.strip() for origin in raw_origins.split(',') if origin.strip()]
+    origins: list[object] = []
+
+    for origin in [value.strip() for value in raw_origins.split(',') if value.strip()]:
+        if '*' in origin:
+            escaped = re.escape(origin).replace(r'\*', '.*')
+            origins.append(re.compile(f'^{escaped}$'))
+        else:
+            origins.append(origin)
+
     if origins:
         return origins
+
     return [
-        '*',
+        'http://localhost:5173',
+        'http://localhost:4173',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:4173',
     ]
 
 def create_app():
