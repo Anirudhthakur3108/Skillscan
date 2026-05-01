@@ -9,8 +9,9 @@ Model Strategy (cost-aware):
 import os
 import json
 import re
+import ast
 from dotenv import load_dotenv
-from typing import Dict, List
+from typing import Dict, List, Optional, Any, Callable, Union
 from mistralai.client import MistralClient
 from schemas import (
     AIAssessmentResponse, 
@@ -38,6 +39,88 @@ def _extract_json(text: str) -> dict:
     if match:
         text = match.group(1)
     return json.loads(text.strip())
+
+
+def _safe_parse_json(raw: str, *, fallback_getter: Optional[Callable[[], Any]] = None, skill_name: Optional[str] = None, claimed_proficiency: int = 5, num_questions: int = 5, model_key: Optional[str] = None) -> Optional[Union[dict, list]]:
+    """Attempt to parse JSON from a possibly-malformed LLM response.
+
+    Strategies tried (in order):
+    - `_extract_json` (handles ```json fences)
+    - `json.loads` on raw
+    - extract first balanced {...} substring and `json.loads`
+    - remove trailing commas and `json.loads`
+    - `ast.literal_eval` as a last-ditch tolerant parser
+    - if provided, call `fallback_getter()` to obtain a safe response and parse that
+
+    Returns a Python object (dict/list) or None if parsing ultimately fails.
+    """
+    # 1) strip fences and try
+    try:
+        return _extract_json(raw)
+    except Exception:
+        pass
+
+    # 2) direct json.loads
+    try:
+        return json.loads(raw)
+    except Exception:
+        pass
+
+    # 3) try to find a balanced JSON object in the text
+    try:
+        start = raw.find('{')
+        if start != -1:
+            stack = 0
+            end = -1
+            for i in range(start, len(raw)):
+                ch = raw[i]
+                if ch == '{':
+                    stack += 1
+                elif ch == '}':
+                    stack -= 1
+                if stack == 0:
+                    end = i
+                    break
+            if end != -1:
+                candidate = raw[start:end+1]
+                try:
+                    return json.loads(candidate)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    # 4) remove trailing commas (common LLM issue)
+    try:
+        candidate = re.sub(r',\s*([}\]])', r'\1', raw)
+        return json.loads(candidate)
+    except Exception:
+        pass
+
+    # 5) ast.literal_eval as tolerant fallback (handles single quotes etc.)
+    try:
+        obj = ast.literal_eval(raw)
+        if isinstance(obj, (dict, list)):
+            return obj
+    except Exception:
+        pass
+
+    # 6) use provided fallback_getter to obtain safe content then parse
+    if fallback_getter:
+        try:
+            fb = fallback_getter()
+            if isinstance(fb, (dict, list)):
+                return fb
+            if isinstance(fb, str):
+                try:
+                    return _safe_parse_json(fb, fallback_getter=None)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    # Give up — return None to let caller handle fallback
+    return None
 
 
 def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperature: float = 0.3) -> str:
@@ -502,11 +585,16 @@ All MCQ questions must be unique and non-repetitive.
 Questions must be directly relevant to {skill_name}, with a balanced mix of conceptual, applied, troubleshooting, and best-practice scenarios.
 """
     raw = _call_mistral("generation", system_prompt, user_prompt)
-    try:
-        data = _extract_json(raw)
-    except json.JSONDecodeError:
-        # Fallback: try parsing the raw string directly
-        data = json.loads(raw)
+    data = _safe_parse_json(
+      raw,
+      fallback_getter=lambda: json.dumps(build_fallback_assessment_payload(skill_name, claimed_proficiency, num_questions)),
+      skill_name=skill_name,
+      claimed_proficiency=claimed_proficiency,
+      num_questions=num_questions,
+      model_key="generation",
+    )
+    if data is None or not isinstance(data, dict):
+      data = build_fallback_assessment_payload(skill_name, claimed_proficiency, num_questions)
     normalized = _normalize_assessment_payload(
         data=data,
         skill_name=skill_name,
@@ -558,10 +646,14 @@ Set gap_identified to true if overall_score < 6.
 Be specific and constructive in feedback.
 """
     raw = _call_mistral("scoring", system_prompt, user_prompt)
-    try:
-        data = _extract_json(raw)
-    except json.JSONDecodeError:
-        data = json.loads(raw)
+    data = _safe_parse_json(raw, fallback_getter=lambda: _get_mock_response("scoring", user_prompt), model_key="scoring")
+    if data is None or not isinstance(data, dict):
+      fb = _get_mock_response("scoring", user_prompt)
+      try:
+        parsed = _safe_parse_json(fb)
+        data = parsed if isinstance(parsed, dict) else json.loads(fb)
+      except Exception:
+        data = json.loads(fb)
     return AIScoreResponse.model_validate(data)
 
 
@@ -614,10 +706,14 @@ Include exactly 3 phases. Phase 1: High priority (foundational gaps). Phase 2: M
 Use real, specific, preferably free or well-known resources.
 """
     raw = _call_mistral("planning", system_prompt, user_prompt)
-    try:
-        data = _extract_json(raw)
-    except json.JSONDecodeError:
-        data = json.loads(raw)
+    data = _safe_parse_json(raw, fallback_getter=lambda: _get_mock_response("planning", user_prompt), model_key="planning")
+    if data is None or not isinstance(data, dict):
+      fb = _get_mock_response("planning", user_prompt)
+      try:
+        parsed = _safe_parse_json(fb)
+        data = parsed if isinstance(parsed, dict) else json.loads(fb)
+      except Exception:
+        data = json.loads(fb)
     return AILearningPlanResponse.model_validate(data)
 
 
@@ -662,11 +758,15 @@ Focus areas should be actionable and specific to {skill_name}.
 Improvement potential is 0-10, where 10 means user can improve significantly with focused effort.
 """
     raw = _call_mistral("scoring", system_prompt, user_prompt)
+    data = _safe_parse_json(raw, fallback_getter=lambda: _get_mock_response("scoring", user_prompt), model_key="scoring")
     try:
-        data = _extract_json(raw)
-    except json.JSONDecodeError:
-        data = json.loads(raw)
-    try:
+      if data is None or not isinstance(data, dict):
+        fb = _get_mock_response("scoring", user_prompt)
+        try:
+            parsed = _safe_parse_json(fb)
+            data = parsed if isinstance(parsed, dict) else json.loads(fb)
+        except Exception:
+            data = json.loads(fb)
       return AIGapAnalysisResponse.model_validate(data)
     except Exception as e:
       print(f"Gap analysis schema validation failed: {e}. Falling back to deterministic gaps.")
