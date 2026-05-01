@@ -10,6 +10,8 @@ import os
 import json
 import re
 import ast
+import os as _os
+import concurrent.futures
 from dotenv import load_dotenv
 from typing import Dict, List, Optional, Any, Callable, Union
 from mistralai.client import MistralClient
@@ -127,18 +129,37 @@ def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperat
     """Call Mistral with the appropriate model tier. Returns raw text. Fallback to mock data if API key is missing or fails."""
     if not _api_key or _api_key == "your_mistral_api_key_here":
         return _get_mock_response(model_key, user_prompt)
-        
-    try:
+
+    # Use a short, configurable timeout to avoid blocking gunicorn workers.
+    timeout_seconds = int(_os.getenv("MISTRAL_TIMEOUT_SECONDS", "8"))
+
+    def _do_chat():
         model = MODELS[model_key]
-        response = client.chat(
-          messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": user_prompt},
-          ],
-          model=model,
-          temperature=temperature,
+        return client.chat(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+            model=model,
+            temperature=temperature,
         )
-        return response.choices[0].message.content
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            fut = ex.submit(_do_chat)
+            try:
+                response = fut.result(timeout=timeout_seconds)
+            except concurrent.futures.TimeoutError:
+                fut.cancel()
+                print(f"Mistral API timed out after {timeout_seconds}s; falling back to mock data.")
+                return _get_mock_response(model_key, user_prompt)
+
+        # success
+        try:
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Mistral response parsing failed: {e}. Falling back to mock data.")
+            return _get_mock_response(model_key, user_prompt)
     except Exception as e:
         print(f"Mistral API failed: {e}. Falling back to mock data.")
         return _get_mock_response(model_key, user_prompt)
