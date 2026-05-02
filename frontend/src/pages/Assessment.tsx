@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { FaSpinner, FaCircleCheck } from 'react-icons/fa6';
+import { FaSpinner, FaArrowRight } from 'react-icons/fa6';
+import { LuBrainCircuit } from 'react-icons/lu';
+import { FiFileText } from 'react-icons/fi';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { LuBrainCircuit } from 'react-icons/lu';
-import { TiMediaRecord } from 'react-icons/ti';
-import { BiInfoCircle } from 'react-icons/bi';
 
-interface Question {
-  id: string;
-  question: string;
-  options: { id: string, text: string }[];
-  difficulty: number;
+interface AssessmentItem {
+  assessment_id: number;
+  skill_name: string;
+  category: string;
+  status: string;
+  score: number | null;
+  gap_identified: boolean | null;
+  created_at: string;
 }
 
 const Assessment: React.FC = () => {
@@ -20,296 +22,171 @@ const Assessment: React.FC = () => {
   const { user } = useAuth();
 
   const assessmentId = searchParams.get('assessment_id');
-
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [skillName, setSkillName] = useState<string>('');
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [assessmentsList, setAssessmentsList] = useState<AssessmentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<number>(5);
-  const [numQuestions, setNumQuestions] = useState<number>(5);
-
-  // State for all assessments list
-  const [assessmentsList, setAssessmentsList] = useState<any[]>([]);
-
-  // Track answers
-  const [answers, setAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!assessmentId) {
-      if (!user?.id) return;
-
-      const fetchAllAssessments = async () => {
-        try {
-          const response = await apiClient.get(`/assessments/student/${user.id}`);
-          setAssessmentsList(response.data.assessments || []);
-        } catch (err) {
-          console.error("Failed to load assessments:", err);
-          setError("Failed to load assessments.");
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchAllAssessments();
+    // If an assessment_id is provided in the URL, redirect to the modern test runner
+    // which supports MCQ, Coding, and Case Study questions.
+    if (assessmentId) {
+      navigate(`/assessment-test?assessment_id=${assessmentId}`, { replace: true });
       return;
     }
 
-    const fetchAssessment = async () => {
+    const fetchAllAssessments = async () => {
+      if (!user?.id) return;
       try {
-        const response = await apiClient.get(`/assessments/${assessmentId}`);
-        const data = response.data;
-        if (data.status === 'completed') {
-          navigate(`/results?assessment_id=${assessmentId}`);
-          return;
-        }
-
-        setSkillName(data.skill_name);
-        setDifficulty(data.difficulty || 5);
-        setNumQuestions(data.num_questions || 5);
-
-        // Combine MCQs and other types if they exist, here we focus on MCQs
-        const mcqs = data.questions?.mcq || [];
-        setQuestions(mcqs);
+        const response = await apiClient.get(`/assessments/student/${user.id}`);
+        setAssessmentsList(response.data.assessments || []);
       } catch (err) {
-        console.error("Failed to load assessment:", err);
-        setError("Failed to load assessment. It may not exist or you don't have access.");
+        console.error("Failed to load assessments:", err);
+        setError("Failed to load assessments. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchAssessment();
+    fetchAllAssessments();
   }, [assessmentId, navigate, user]);
 
-  const totalSteps = questions.length || 5;
-
-  const handleSelectOption = (questionId: string, optionId: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: optionId }));
-
-    // Auto-advance after short delay
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      if (currentStep < totalSteps) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        submitAssessment({ ...answers, [questionId]: optionId });
-      }
-    }, 1000);
-  };
-
-  const submitAssessment = async (finalAnswers: Record<string, string>) => {
-    setIsProcessing(true);
-    try {
-      const response = await apiClient.post(`/assessments/${assessmentId}/submit`, {
-        student_answers: {
-          mcq: finalAnswers,
-          coding: {},
-          case_study: {}
-        }
-      });
-      if (response.data?.skill_score_id) {
-        localStorage.setItem(`skillScoreId_${assessmentId}`, response.data.skill_score_id.toString());
-      }
-      navigate(`/results?assessment_id=${assessmentId}`);
-    } catch (err) {
-      console.error("Failed to submit assessment:", err);
-      setError("Failed to submit assessment. Please try again.");
-      setIsProcessing(false);
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading && !assessmentId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <FaSpinner size={48} className="animate-spin text-primary" />
+      <div className="min-h-[70vh] flex flex-col items-center justify-center">
+        <FaSpinner size={48} className="animate-spin text-primary mb-4" />
+        <p className="text-foreground-muted font-medium animate-pulse">Loading your verification history...</p>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="glass p-8 rounded-3xl border border-red-500/20 max-w-md text-center space-y-4">
-          <h2 className="text-xl font-bold text-red-400">Error</h2>
-          <p className="text-foreground-muted">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-2 bg-white/5 rounded-lg font-bold hover:bg-white/10"
-          >
-            Return to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!assessmentId) {
-    return (
-      <div className="container mx-auto px-6 py-12 max-w-5xl min-h-[70vh] flex flex-col">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight">My Assessments</h1>
-          <p className="text-foreground-muted mt-2">Manage and continue your generated skill assessments.</p>
-        </div>
-
-        {assessmentsList.length === 0 ? (
-          <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-            <LuBrainCircuit size={40} className="mx-auto opacity-20" />
-            <p className="font-medium">No assessments generated yet. Go to Dashboard to generate one.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assessmentsList.map(a => (
-              <div key={a.assessment_id} className="glass p-6 rounded-2xl border border-white/5 flex flex-col space-y-6 hover:border-white/20 transition-all">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-xl leading-tight">{a.skill_name}</h3>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${a.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                      {a.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-primary uppercase tracking-widest font-bold">{a.category}</p>
-                </div>
-
-                <div className="flex-1"></div>
-
-                <div className="pt-4 border-t border-white/5">
-                  {a.status === 'completed' ? (
-                    <button
-                      onClick={() => navigate(`/results?assessment_id=${a.assessment_id}`)}
-                      className="w-full py-3 bg-white/5 rounded-xl text-sm font-bold hover:bg-white/10 transition-colors"
-                    >
-                      View Results
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => navigate(`/assessment?assessment_id=${a.assessment_id}`)}
-                      className="w-full py-3 bg-primary/20 text-primary rounded-xl text-sm font-bold hover:bg-primary hover:text-white transition-colors"
-                    >
-                      Start Assessment
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p>No questions found for this assessment.</p>
-      </div>
-    );
-  }
-
-  const currentQuestion = questions[currentStep - 1];
 
   return (
-    <div className="container mx-auto px-6 py-12 max-w-4xl min-h-[70vh] flex flex-col">
-      {/* Header Info */}
-      <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-            <LuBrainCircuit size={28} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold uppercase tracking-widest text-foreground-muted/60">{skillName}</h1>
-            <div className="text-sm font-bold text-primary">Question {currentStep} of {totalSteps}</div>
-            <div className="text-xs text-foreground-muted mt-1 flex items-center gap-2">
-              <span>Difficulty: {difficulty}/10</span>
-              <span>•</span>
-              <span>{numQuestions} Questions</span>
-            </div>
-          </div>
+    <div className="container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">My Assessments</h1>
+          <p className="text-foreground-muted font-medium">
+            Manage and continue your generated skill verification journeys.
+          </p>
         </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 px-4 py-2 glass border border-white/10 rounded-xl">
-            <TiMediaRecord size={18} className="text-primary" />
-            <span className="font-mono font-bold">14:52</span>
-          </div>
-          <div className="hidden md:flex gap-1">
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 w-8 rounded-full transition-all duration-500 ${i + 1 < currentStep ? 'bg-primary' : i + 1 === currentStep ? 'bg-primary/40' : 'bg-white/5'
-                  }`}
-              />
-            ))}
-          </div>
-        </div>
+        <button 
+          onClick={() => navigate('/dashboard')}
+          className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center gap-2"
+        >
+          Back to Dashboard
+        </button>
       </div>
 
-      {!isProcessing ? (
-        <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <div className="space-y-8 mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-container-high text-xs font-bold uppercase tracking-wider text-primary border border-primary/20">
-              <BiInfoCircle size={12} />
-              Level {currentQuestion.difficulty}
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
-              {currentQuestion.question}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {currentQuestion.options?.map((option, i) => (
-              <button
-                key={option.id}
-                onClick={() => handleSelectOption(currentQuestion.id, option.id)}
-                className="group flex items-center justify-between p-6 rounded-2xl glass border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all text-left animate-in fade-in slide-in-from-bottom-2 duration-300"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className="flex items-center gap-6">
-                  <div className="min-w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-bold group-hover:bg-primary group-hover:text-white transition-all">
-                    {option.id}
-                  </div>
-                  <span className="text-lg font-medium">{option.text}</span>
-                </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FaCircleCheck className="text-primary" />
-                </div>
-              </button>
-            ))}
-          </div>
+      {error ? (
+        <div className="glass p-8 rounded-3xl border border-red-500/20 text-center space-y-4">
+          <p className="text-red-400 font-medium">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-primary/10 text-primary rounded-xl font-bold hover:bg-primary hover:text-white transition-all"
+          >
+            Retry
+          </button>
         </div>
-
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in-95 duration-500 text-center">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-            <div className="relative p-10 rounded-[3rem] glass border border-white/20 shadow-2xl">
-              <FaSpinner size={64} className="text-primary animate-spin" />
-            </div>
+      ) : assessmentsList.length === 0 ? (
+        <div className="glass p-20 rounded-[3rem] border border-white/5 text-center space-y-6">
+          <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <FiFileText size={40} className="text-white/20" />
           </div>
-
-          <div className="space-y-3">
-            <h3 className="text-2xl font-bold">
-              {currentStep >= totalSteps ? 'Evaluating Responses...' : 'AI is crafting your tailored assessment...'}
-            </h3>
-            <p className="text-foreground-muted max-w-sm mx-auto">
-              {currentStep >= totalSteps
-                ? 'Synthesizing your performance against industry benchmarks.'
-                : 'Analyzing your last answer to determine the optimal next challenge.'}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-white/90">No assessments found</h2>
+            <p className="text-foreground-muted max-w-xs mx-auto">
+              You haven't generated any assessments yet. Head back to the dashboard to start verifying your skills.
             </p>
           </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {assessmentsList.map((a) => (
+            <div 
+              key={a.assessment_id} 
+              className="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col space-y-8 hover:border-primary/30 transition-all group relative overflow-hidden"
+            >
+              {/* Decorative background element */}
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
+              
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-primary group-hover:scale-110 transition-transform">
+                    <LuBrainCircuit size={24} />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full ${
+                    a.status === 'completed' 
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {a.status}
+                  </span>
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className="font-bold text-xl leading-tight group-hover:text-primary transition-colors">
+                    {a.skill_name}
+                  </h3>
+                  <p className="text-[11px] text-foreground-muted uppercase tracking-[0.15em] font-bold">
+                    {a.category}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1 min-h-[40px] relative z-10">
+                {a.status === 'completed' && a.score !== null && (
+                  <div className="space-y-1">
+                    <div className="text-3xl font-black text-white tabular-nums">{a.score}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">Verified Proficiency</div>
+                  </div>
+                )}
+                {a.status !== 'completed' && (
+                  <div className="space-y-3">
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500/50 w-1/3 rounded-full" />
+                    </div>
+                    <div className="text-[10px] font-bold text-amber-500/70 uppercase tracking-widest">Questions Generated • Ready</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-6 border-t border-white/5 relative z-10">
+                {a.status === 'completed' ? (
+                  <button
+                    onClick={() => navigate(`/results?assessment_id=${a.assessment_id}`)}
+                    className="w-full py-4 bg-white/5 rounded-2xl text-sm font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-white/5"
+                  >
+                    View Performance Report <FaArrowRight size={14} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate(`/assessment-test?assessment_id=${a.assessment_id}`)}
+                    className="w-full py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                  >
+                    Start Assessment <FaArrowRight size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Footer Branding */}
-      <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-foreground-muted/40">
-        <span>© 2026 Scholar Veritas Academic Portal</span>
-        <span className="text-primary">Architecting the Future of Verification</span>
+      <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground-muted/40">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span>Scholar Veritas Academic Portal</span>
+        </div>
+        <span className="text-primary/60">© 2026 Architecting the Future of Verification</span>
       </div>
     </div>
   );
 };
 
 export default Assessment;
-

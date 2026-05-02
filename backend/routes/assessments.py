@@ -16,7 +16,6 @@ from ai_service import (
     score_assessment, 
     analyze_gaps,
     generate_enhanced_learning_plan,
-    build_fallback_assessment_payload,
 )
 
 assessments_bp = Blueprint('assessments', __name__)
@@ -30,16 +29,16 @@ def _get_difficulty_config(difficulty: int) -> tuple:
     """
     Get test configuration based on difficulty level.
     Returns (num_questions, time_limit_minutes)
+    MCQ count scales with difficulty so harder assessments are more thorough.
     """
-    # Product requirement: keep assessment size fixed at 10 MCQs per skill.
     if difficulty <= 3:
         return (10, 20)
     elif difficulty <= 6:
-        return (10, 25)
+        return (15, 30)
     elif difficulty <= 8:
-        return (10, 30)
+        return (15, 35)
     else:
-        return (10, 35)
+        return (20, 40)
 
 
 def _safe_int(value, default: int) -> int:
@@ -204,60 +203,40 @@ def _randomize_mcq_option_order(question_data: dict) -> dict:
 
 
 def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, proficiency_claimed: int, num_questions: int, exclude_mcq_ids: set = None):
+    """Resolve a set of assessment questions — cached or AI-generated.
+
+    Returns (question_data, source_label).  Raises RuntimeError if AI
+    generation fails and there are no cached questions to fall back to.
+    """
     cached_questions = _get_from_question_bank(skill_id, difficulty)
     if not cached_questions:
         cached_questions = _get_from_question_bank(skill_id)
 
-    # We want at least num_questions questions cached in the bank to ensure we have enough
+    # Serve from cache if we have enough quality questions
     if _is_quality_question_set(cached_questions, num_questions, skill_name):
         selected = _select_diverse_questions(cached_questions, num_questions, exclude_mcq_ids)
         return _randomize_mcq_option_order(selected), "question_bank"
 
-    # Start with existing to avoid losing them
+    # Start with existing cached questions
     generated = {"mcq": [], "coding": [], "case_study": []}
     if cached_questions:
         generated["mcq"] = cached_questions.get("mcq", [])
         generated["coding"] = cached_questions.get("coding", [])
         generated["case_study"] = cached_questions.get("case_study", [])
 
-    # Fetch questions until we have at least num_questions MCQs (max 1 call to avoid infinite loops and timeouts)
-    attempts = 0
-    while len(generated["mcq"]) < num_questions and attempts < 1:
-        batch_size = max(15, num_questions)
-        try:
-            ai_response = generate_assessment(
-                skill_name,
-                proficiency_claimed,
-                num_questions=batch_size,
-            )
-            batch = ai_response.model_dump()
-            generated["mcq"].extend(batch.get("mcq", []))
-            generated["coding"].extend(batch.get("coding", []))
-            generated["case_study"].extend(batch.get("case_study", []))
-        except Exception as e:
-            print(f"Failed to generate questions batch: {e}")
-            break
-        attempts += 1
+    # Generate fresh questions from Mistral AI
+    ai_response = generate_assessment(
+        skill_name,
+        proficiency_claimed,
+        num_questions=num_questions,
+    )
+    batch = ai_response.model_dump()
+    generated["mcq"].extend(batch.get("mcq", []))
+    generated["coding"].extend(batch.get("coding", []))
+    generated["case_study"].extend(batch.get("case_study", []))
 
     # Deduplicate MCQs
     generated["mcq"] = _dedupe_mcqs(generated["mcq"])
-
-    # Guardrail: never persist or return an empty assessment.
-    # If AI generation or cached data produced no usable MCQs, fall back to
-    # a deterministic in-app question set so the assessment page always renders.
-    if len(generated["mcq"]) < num_questions:
-        fallback_payload = build_fallback_assessment_payload(skill_name, proficiency_claimed, num_questions)
-        fallback_mcq = _dedupe_mcqs(fallback_payload.get("mcq", []))
-        if len(generated["mcq"]) < num_questions:
-            existing_questions = {str(item.get("question", "")).strip().lower() for item in generated["mcq"]}
-            for item in fallback_mcq:
-                question_key = str(item.get("question", "")).strip().lower()
-                if question_key in existing_questions:
-                    continue
-                generated["mcq"].append(item)
-                existing_questions.add(question_key)
-                if len(generated["mcq"]) >= num_questions:
-                    break
 
     _save_to_question_bank(skill_id, generated, difficulty)
 
