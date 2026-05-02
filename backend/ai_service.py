@@ -131,7 +131,7 @@ def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperat
         return _get_mock_response(model_key, user_prompt)
 
     # Use a short, configurable timeout to avoid blocking gunicorn workers.
-    timeout_seconds = int(_os.getenv("MISTRAL_TIMEOUT_SECONDS", "8"))
+    timeout_seconds = int(_os.getenv("MISTRAL_TIMEOUT_SECONDS", "15"))
 
     def _do_chat():
         model = MODELS[model_key]

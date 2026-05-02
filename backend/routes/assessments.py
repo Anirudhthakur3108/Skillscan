@@ -208,8 +208,8 @@ def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, profi
     if not cached_questions:
         cached_questions = _get_from_question_bank(skill_id)
 
-    # We want at least 30 questions cached in the bank to ensure variety
-    if _is_quality_question_set(cached_questions, 30, skill_name):
+    # We want at least num_questions questions cached in the bank to ensure we have enough
+    if _is_quality_question_set(cached_questions, num_questions, skill_name):
         selected = _select_diverse_questions(cached_questions, num_questions, exclude_mcq_ids)
         return _randomize_mcq_option_order(selected), "question_bank"
 
@@ -220,10 +220,10 @@ def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, profi
         generated["coding"] = cached_questions.get("coding", [])
         generated["case_study"] = cached_questions.get("case_study", [])
 
-    # Fetch questions until we have at least 30 MCQs (max 3 calls to avoid infinite loops)
+    # Fetch questions until we have at least num_questions MCQs (max 1 call to avoid infinite loops and timeouts)
     attempts = 0
-    while len(generated["mcq"]) < 30 and attempts < 3:
-        batch_size = 15
+    while len(generated["mcq"]) < num_questions and attempts < 1:
+        batch_size = max(15, num_questions)
         try:
             ai_response = generate_assessment(
                 skill_name,
@@ -258,8 +258,6 @@ def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, profi
                 existing_questions.add(question_key)
                 if len(generated["mcq"]) >= num_questions:
                     break
-
-    generated["mcq"] = generated["mcq"][:num_questions]
 
     _save_to_question_bank(skill_id, generated, difficulty)
 
