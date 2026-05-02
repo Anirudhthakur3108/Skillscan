@@ -570,7 +570,6 @@ const AssessmentTest: React.FC = () => {
           <h3 className="text-sm font-bold uppercase tracking-wide text-foreground-muted mb-4">Quick Navigation</h3>
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {items.map((item, idx) => {
-              const itemId = item.data.id;
               const isAnswered = isItemAnswered(item);
               const isCurrent = idx === currentIndex;
               const typeColor = item.type === 'coding'
