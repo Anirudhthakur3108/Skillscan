@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FaTrophy, 
+import {
   FaArrowRight,
   FaSpinner,
-  FaCircleCheck
+  FaCircleCheck,
 } from 'react-icons/fa6';
+import {
+  FiFileText,
+  FiActivity,
+  FiTarget,
+  FiAlertTriangle,
+  FiBookOpen,
+  FiCheckCircle,
+  FiChevronRight,
+  FiZap,
+  FiAward,
+  FiTrendingUp,
+} from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { FiFileText } from 'react-icons/fi';
-import { BiTrendingUp } from 'react-icons/bi';
 
 interface Assessment {
   assessment_id: number;
@@ -58,8 +67,6 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, [user]);
 
-
-
   const handleGenerateAssessment = async (skill: StudentSkill) => {
     setGeneratingFor(skill.skill_id);
     setError(null);
@@ -82,7 +89,7 @@ const Dashboard: React.FC = () => {
         difficulty: skill.difficulty_configured,
         proficiency_claimed: skill.proficiency_claimed,
       });
-      
+
       if (res.data.assessment_id) {
         navigate(`/assessment-test?assessment_id=${res.data.assessment_id}`);
       } else {
@@ -99,233 +106,369 @@ const Dashboard: React.FC = () => {
 
   const completedAssessments = assessments.filter(a => a.status === 'completed');
   const gaps = completedAssessments.filter(a => a.gap_identified);
-  
-  // Find skills that don't have an assessment yet
+
   const assessedSkillIds = new Set(assessments.map(a => a.skill_name));
   const pendingSkills = skills.filter(s => !assessedSkillIds.has(s.skill_name));
   const unconfiguredPendingSkills = pendingSkills.filter(
     (skill) => !skill.difficulty_configured || !skill.proficiency_claimed,
   );
 
+  const completionPercent = skills.length > 0
+    ? Math.floor((completedAssessments.length / skills.length) * 100)
+    : 0;
+
+  // ─── Loading state ─────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center">
+        <FaSpinner size={48} className="animate-spin text-secondary mb-4" />
+        <p className="text-primary/60 font-medium animate-pulse">Loading your dashboard...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="py-6 lg:py-12">
-      <div className="space-y-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Welcome back, {user?.name || 'Student'}</h1>
-            <p className="text-foreground-muted font-medium">Your academic verification journey is {Math.floor((completedAssessments.length / (skills.length || 1)) * 100)}% complete.</p>
+    <div className="container mx-auto px-6 py-12 max-w-6xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ─── Page Header ─────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-secondary-container/20 text-secondary">
+            <FiActivity size={32} />
           </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => navigate('/skills')}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
-            >
-              Add / Verify Skills <FaArrowRight size={18} />
-            </button>
+          <div>
+            <h1 className="text-4xl font-display font-extrabold text-primary tracking-tight">
+              Welcome back, {user?.name || 'Student'}
+            </h1>
+            <p className="text-primary/60 mt-1 font-medium">
+              Your skill verification journey is {completionPercent}% complete.
+            </p>
           </div>
         </div>
+        <button
+          onClick={() => navigate('/skills')}
+          className="btn-primary flex items-center gap-2"
+        >
+          Add / Verify Skills <FaArrowRight size={16} />
+        </button>
+      </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <FaSpinner className="animate-spin text-primary" size={48} />
-          </div>
-        ) : (
-          <>
-            {/* Error Display */}
-            {error && (
-              <div className="glass p-4 rounded-2xl border border-red-500/20 bg-red-500/5 flex items-start gap-3 mb-6">
-                <div className="text-red-500 font-bold">⚠️</div>
-                <div className="flex-1">
-                  <p className="text-red-400 font-bold text-sm">{error}</p>
-                </div>
-                <button 
-                  onClick={() => setError(null)}
-                  className="text-red-500 hover:text-red-400 transition-colors"
-                >
-                  ✕
-                </button>
+      {/* ─── Error Banner ────────────────────────────────────────────────── */}
+      {error && (
+        <div className="glass p-5 rounded-2xl border-red-500/20 bg-red-50/60 flex items-start gap-3">
+          <FiAlertTriangle className="text-red-500 shrink-0 mt-0.5" size={20} />
+          <p className="text-red-600 font-semibold text-sm flex-1">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-400 hover:text-red-600 transition-colors font-bold text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* ─── Stats Row ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {
+            label: 'Total Skills',
+            value: skills.length,
+            icon: <FiTarget size={20} />,
+            color: 'bg-blue-100 text-secondary',
+          },
+          {
+            label: 'Verified',
+            value: completedAssessments.length,
+            icon: <FiCheckCircle size={20} />,
+            color: 'bg-emerald-100 text-emerald-600',
+          },
+          {
+            label: 'Pending',
+            value: pendingSkills.length,
+            icon: <FiZap size={20} />,
+            color: 'bg-amber-100 text-amber-600',
+          },
+          {
+            label: 'Gaps Found',
+            value: gaps.length,
+            icon: <FiAlertTriangle size={20} />,
+            color: 'bg-red-100 text-red-500',
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="glass p-5 rounded-2xl flex items-center gap-4 hover:shadow-ambient transition-shadow"
+          >
+            <div className={`p-3 rounded-xl ${stat.color}`}>{stat.icon}</div>
+            <div>
+              <div className="text-2xl font-display font-extrabold text-primary leading-none">
+                {stat.value}
               </div>
-            )}
-
-            {/* Top Row: Stats & Milestone */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 glass rounded-3xl p-8 border border-white/10 flex flex-col justify-between min-h-[200px] relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
-                <div className="space-y-4 relative z-10">
-                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Verification Milestone</div>
-                  <h2 className="text-2xl font-bold max-w-md leading-snug">
-                    You have {completedAssessments.length} verified {completedAssessments.length === 1 ? 'skill' : 'skills'} in your professional profile.
-                  </h2>
-                </div>
-                <div className="pt-6 relative z-10">
-                  <button 
-                    onClick={() => navigate('/skills')}
-                    className="text-sm font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2"
-                  >
-                    View skill profile <FaArrowRight size={14} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="glass rounded-3xl p-8 border border-white/10 flex flex-col justify-between items-center text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-emerald-500/5 opacity-50" />
-                <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2 relative z-10">
-                  <FaTrophy size={32} />
-                </div>
-                <div className="space-y-1 relative z-10">
-                  <div className="text-3xl font-black">Level {Math.floor(completedAssessments.length / 3) + 1}</div>
-                  <div className="text-[10px] text-foreground-muted uppercase tracking-[0.2em] font-bold">Academic Rank</div>
-                </div>
+              <div className="text-xs font-semibold text-primary/50 uppercase tracking-wider mt-1">
+                {stat.label}
               </div>
             </div>
+          </div>
+        ))}
+      </div>
 
-            {/* Grid Layout for Recent and Skill Gaps */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {/* Recent Assessments */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-xl font-bold">Recent Assessments</h3>
-                  <button className="text-xs font-bold text-primary uppercase tracking-widest hover:underline">View All</button>
-                </div>
-                {assessments.length === 0 ? (
-                  <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                    <FiFileText size={40} className="mx-auto opacity-20" />
-                    <p className="font-medium">No assessments taken yet.</p>
+      {/* ─── Milestone Banner ────────────────────────────────────────────── */}
+      <div className="glass rounded-2xl p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-secondary/8 to-transparent rounded-bl-full -z-[1]" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600">
+              <FiAward size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-primary/50 uppercase tracking-wider mb-1">
+                Academic Rank
+              </div>
+              <div className="text-2xl font-display font-extrabold text-primary leading-none">
+                Level {Math.floor(completedAssessments.length / 3) + 1}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex-1 max-w-sm">
+            <div className="flex justify-between text-xs font-semibold text-primary/50 mb-2">
+              <span>Verification Progress</span>
+              <span>{completionPercent}%</span>
+            </div>
+            <div className="h-2 w-full bg-primary/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-secondary to-emerald rounded-full transition-all duration-700"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/skills')}
+            className="text-sm font-bold text-secondary hover:underline flex items-center gap-1 shrink-0"
+          >
+            View skill profile <FiChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Two Column Layout ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        {/* ─── LEFT: Recent Assessments ──────────────────────────────────── */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-display font-extrabold text-primary flex items-center gap-2">
+              <FiFileText size={20} className="text-secondary" />
+              Recent Assessments
+            </h2>
+            {assessments.length > 0 && (
+              <button
+                onClick={() => navigate('/assessment')}
+                className="text-xs font-bold text-secondary uppercase tracking-wider hover:underline flex items-center gap-1"
+              >
+                View All <FiChevronRight size={14} />
+              </button>
+            )}
+          </div>
+
+          {assessments.length === 0 ? (
+            <div className="glass p-12 rounded-2xl text-center space-y-4">
+              <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
+                <FiFileText size={28} className="text-primary/30" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-display font-bold text-primary">No assessments yet</h3>
+                <p className="text-sm text-primary/60 max-w-xs mx-auto">
+                  Generate your first assessment from the skills panel to start verifying your expertise.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {assessments.slice(0, 5).map((item) => (
+                <div
+                  key={item.assessment_id}
+                  onClick={() =>
+                    item.status === 'completed'
+                      ? navigate(`/results?assessment_id=${item.assessment_id}`)
+                      : navigate(`/assessment-test?assessment_id=${item.assessment_id}`)
+                  }
+                  className="glass p-5 rounded-xl flex items-center justify-between group hover:shadow-ambient hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    {/* Status indicator */}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      item.status === 'completed'
+                        ? 'bg-emerald-100 text-emerald-600'
+                        : 'bg-amber-100 text-amber-600'
+                    }`}>
+                      {item.status === 'completed'
+                        ? <FiCheckCircle size={18} />
+                        : <FiZap size={18} />}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-primary group-hover:text-secondary transition-colors truncate">
+                        {item.skill_name}
+                      </div>
+                      <div className="text-xs text-primary/50 font-medium">
+                        {item.category}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {assessments.slice(0, 5).map((item) => (
-                      <div key={item.assessment_id} className="glass p-6 rounded-2xl border border-white/5 flex items-center justify-between group hover:border-white/20 transition-all cursor-pointer" onClick={() => navigate(`/results?assessment_id=${item.assessment_id}`)}>
-                        <div className="space-y-1.5 flex-1">
-                          <div className="font-bold group-hover:text-primary transition-colors flex items-center gap-2">
-                            {item.skill_name}
-                            {item.status !== 'completed' && (
-                              <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-                            )}
-                          </div>
-                          <div className="text-xs text-foreground-muted font-medium">{item.category}</div>
-                          
-                          {item.status !== 'completed' && (
-                            <div className="pt-2 pr-12">
-                              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-yellow-500/50 w-1/3 rounded-full" />
-                              </div>
-                              <div className="text-[10px] font-bold text-yellow-500/70 mt-1 uppercase tracking-wider">In Progress • 33%</div>
-                            </div>
-                          )}
+
+                  <div className="text-right ml-4 shrink-0">
+                    {item.status === 'completed' ? (
+                      <div>
+                        <div className="text-xl font-display font-extrabold text-primary tabular-nums">
+                          {item.score}<span className="text-xs font-semibold text-primary/40">/10</span>
                         </div>
-                        <div className="text-right ml-4">
-                          {item.status === 'completed' ? (
-                            <div className="space-y-1">
-                              <div className="text-2xl font-black text-primary tabular-nums">{item.score}</div>
-                              <div className="text-[10px] font-bold uppercase tracking-tighter opacity-50">Verified Score</div>
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); navigate(`/assessment?assessment_id=${item.assessment_id}`); }}
-                              className="px-4 py-2 bg-yellow-500/10 text-yellow-500 rounded-lg text-xs font-bold hover:bg-yellow-500/20 transition-all"
-                            >
-                              Continue
-                            </button>
-                          )}
+                        <div className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">
+                          Verified
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Pending Skills and Gaps */}
-              <div className="space-y-12">
-                {/* Pending Skills to Assess */}
-                <div className="space-y-8">
-                  <div className="px-2 space-y-2">
-                    <h3 className="text-xl font-bold">Skills to Verify</h3>
-                    {unconfiguredPendingSkills.length > 0 && (
-                      <p className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                        {unconfiguredPendingSkills.length} skills need configuration before assessment.
-                      </p>
+                    ) : (
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200/50">
+                        Continue →
+                      </span>
                     )}
                   </div>
-                  {pendingSkills.length === 0 ? (
-                    <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                      <FaCircleCheck size={40} className="mx-auto opacity-20 text-emerald-500" />
-                      <p className="font-medium">All skills verified. Well done!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {pendingSkills.map((item) => (
-                        <div key={item.id} className="glass p-6 rounded-2xl border border-white/5 flex items-center justify-between group hover:border-white/20 transition-all">
-                          <div className="space-y-1">
-                            <div className="font-bold group-hover:text-primary transition-colors">{item.skill_name}</div>
-                            <div className="text-xs text-foreground-muted font-medium">{item.category}</div>
-                            {(!item.difficulty_configured || !item.proficiency_claimed) && (
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                                Difficulty and proficiency setup required
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <button 
-                              onClick={() => handleGenerateAssessment(item)}
-                              disabled={generatingFor === item.skill_id || !item.difficulty_configured || !item.proficiency_claimed}
-                              className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-sm font-bold hover:bg-primary text-white transition-all disabled:opacity-50 disabled:hover:bg-primary/10 disabled:hover:text-primary shadow-sm"
-                            >
-                              {generatingFor === item.skill_id ? <FaSpinner size={16} className="animate-spin inline" /> : 'Assess Now'}
-                            </button>
-                            {(!item.difficulty_configured || !item.proficiency_claimed) && (
-                              <button
-                                onClick={() => navigate('/skills')}
-                                className="block mt-2 text-[10px] font-bold uppercase tracking-wider text-amber-400 hover:underline"
-                              >
-                                Configure Skill
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                {/* Identified Skill Gaps */}
-                <div className="space-y-8">
-                  <h3 className="text-xl font-bold px-2">Knowledge Gaps</h3>
-                  {gaps.length === 0 ? (
-                    <div className="glass p-12 rounded-3xl border border-white/5 text-center text-foreground-muted space-y-4">
-                      <BiTrendingUp size={40} className="mx-auto opacity-20" />
-                      <p className="font-medium">No gaps identified. Keep it up!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {gaps.slice(0, 5).map((item) => (
-                        <div key={item.assessment_id} className="glass p-6 rounded-2xl border border-white/5 space-y-4 hover:border-primary/20 transition-all cursor-pointer group" onClick={() => navigate(`/results?assessment_id=${item.assessment_id}`)}>
-                          <div className="flex items-center justify-between">
-                            <div className="font-bold group-hover:text-primary transition-colors">{item.skill_name}</div>
-                            <div className="text-[10px] font-bold px-2 py-1 rounded bg-red-500/10 text-red-400 uppercase tracking-wider">Improvement Area</div>
-                          </div>
-                          <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5 group-hover:bg-white/10 transition-colors">
-                            <div className="text-sm w-full">
-                              <span className="text-foreground-muted block text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">AI Insight</span>
-                              <span className="font-medium text-sm line-clamp-2 leading-relaxed italic">
-                                {item.gap_identified ? "Gap identified from latest assessment" : "No gap identified"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              ))}
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        {/* ─── RIGHT: Skills to Verify + Gaps ────────────────────────────── */}
+        <div className="lg:col-span-5 space-y-8">
+
+          {/* Pending Skills */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-display font-extrabold text-primary flex items-center gap-2">
+                <FiTarget size={20} className="text-secondary" />
+                Skills to Verify
+              </h2>
+              {unconfiguredPendingSkills.length > 0 && (
+                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/50 uppercase tracking-wider">
+                  {unconfiguredPendingSkills.length} need setup
+                </span>
+              )}
+            </div>
+
+            {pendingSkills.length === 0 ? (
+              <div className="glass p-10 rounded-2xl text-center space-y-3">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                  <FaCircleCheck size={24} className="text-emerald-500" />
+                </div>
+                <p className="font-bold text-primary">All skills verified!</p>
+                <p className="text-xs text-primary/50">Great work — keep adding new skills to grow.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingSkills.map((item) => {
+                  const isReady = !!item.difficulty_configured && !!item.proficiency_claimed;
+                  const isGenerating = generatingFor === item.skill_id;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="glass p-4 rounded-xl flex items-center justify-between gap-3 hover:shadow-ambient transition-shadow"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-primary truncate text-sm">{item.skill_name}</div>
+                        <div className="text-xs text-primary/50">{item.category}</div>
+                        {!isReady && (
+                          <button
+                            onClick={() => navigate('/skills')}
+                            className="text-[10px] font-bold text-amber-600 hover:underline mt-0.5 uppercase tracking-wider"
+                          >
+                            Configure first →
+                          </button>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => handleGenerateAssessment(item)}
+                        disabled={isGenerating || !isReady}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                          isReady
+                            ? 'bg-secondary text-white hover:bg-blue-700 shadow-sm shadow-secondary/20'
+                            : 'bg-primary/5 text-primary/40 cursor-not-allowed'
+                        }`}
+                      >
+                        {isGenerating ? (
+                          <FaSpinner size={14} className="animate-spin" />
+                        ) : (
+                          'Assess'
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Knowledge Gaps */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-display font-extrabold text-primary flex items-center gap-2">
+              <FiTrendingUp size={20} className="text-secondary" />
+              Knowledge Gaps
+            </h2>
+
+            {gaps.length === 0 ? (
+              <div className="glass p-10 rounded-2xl text-center space-y-3">
+                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                  <FiTrendingUp size={24} className="text-secondary" />
+                </div>
+                <p className="font-bold text-primary">No gaps identified</p>
+                <p className="text-xs text-primary/50">Take more assessments to discover growth areas.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {gaps.slice(0, 5).map((item) => (
+                  <div
+                    key={item.assessment_id}
+                    onClick={() => navigate(`/results?assessment_id=${item.assessment_id}`)}
+                    className="glass p-4 rounded-xl cursor-pointer group hover:shadow-ambient hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-bold text-sm text-primary group-hover:text-secondary transition-colors">
+                        {item.skill_name}
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-50 text-red-500 border border-red-200/50 uppercase tracking-wider">
+                        Gap
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-primary/50">
+                      <span>{item.category}</span>
+                      <span className="flex items-center gap-1 text-secondary font-medium">
+                        View report <FiChevronRight size={12} />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {gaps.length > 0 && (
+                  <button
+                    onClick={() => navigate('/learning-plan')}
+                    className="w-full p-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white text-sm font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  >
+                    <FiBookOpen size={16} />
+                    View Learning Plans
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Dashboard;
-

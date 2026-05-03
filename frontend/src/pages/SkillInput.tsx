@@ -294,20 +294,20 @@ const SkillInput: React.FC = () => {
   return (
     <div className="container mx-auto px-6 py-12 max-w-4xl">
       <div className="text-center space-y-4 mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold border border-primary/20">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container/20 text-secondary text-sm font-semibold border border-secondary/10">
           <FaMicrochip size={16} />
           Semantic Skill Extraction
         </div>
-        <h1 className="text-4xl font-bold">Architect Your Portfolio</h1>
-        <p className="text-lg text-foreground-muted max-w-2xl mx-auto">
+        <h1 className="text-4xl font-display font-extrabold text-primary tracking-tight">Architect Your Portfolio</h1>
+        <p className="text-lg text-primary/60 max-w-2xl mx-auto font-medium">
           Choose your method to map your expertise against industry standards.
         </p>
       </div>
 
       {!isComplete ? (
-        <div className="glass rounded-[2rem] border border-white/20 shadow-2xl overflow-hidden">
+        <div className="glass rounded-2xl shadow-ambient overflow-hidden">
           {/* Tabs */}
-          <div className="flex border-b border-white/10 bg-white/5">
+          <div className="flex border-b border-outline-variant bg-surface-container-low">
             {[
               { id: 'upload', label: 'File Upload', icon: FaUpload },
               { id: 'paste', label: 'Paste Text', icon: FaFont },
@@ -317,8 +317,8 @@ const SkillInput: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveMethod(tab.id as InputMethod)}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${activeMethod === tab.id
-                  ? 'bg-primary text-white'
-                  : 'text-foreground-muted hover:bg-white/10'
+                  ? 'bg-gradient-to-br from-primary to-primary-container text-white'
+                  : 'text-primary/50 hover:bg-primary/5 hover:text-primary'
                   }`}
               >
                 <tab.icon size={18} />
@@ -330,16 +330,16 @@ const SkillInput: React.FC = () => {
           <div className="p-10 flex flex-col items-center justify-center space-y-8">
             {isAnalyzing ? (
               <div className="flex flex-col items-center space-y-6 w-full max-w-md text-center">
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center relative">
-                  <FaSpinner size={40} className="text-primary animate-spin" />
-                  <div className="absolute inset-0 border-4 border-primary/30 border-t-transparent rounded-full" />
+                <div className="w-20 h-20 rounded-full bg-secondary-container/20 flex items-center justify-center relative">
+                  <FaSpinner size={40} className="text-secondary animate-spin" />
+                  <div className="absolute inset-0 border-4 border-secondary/20 border-t-transparent rounded-full" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Synthesizing Skills...</h3>
-                  <p className="text-foreground-muted">Our AI is mapping your experience to industry gold standards.</p>
+                  <h3 className="text-2xl font-display font-extrabold text-primary">Synthesizing Skills...</h3>
+                  <p className="text-primary/60">Our AI is mapping your experience to industry gold standards.</p>
                 </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full animate-progress rounded-full" />
+                <div className="w-full bg-primary/5 h-2 rounded-full overflow-hidden">
+                  <div className="bg-secondary h-full animate-progress rounded-full" />
                 </div>
               </div>
             ) : (
@@ -349,14 +349,14 @@ const SkillInput: React.FC = () => {
                   <div className="w-full flex flex-col items-center space-y-6">
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-64 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center space-y-4 hover:border-primary/50 hover:bg-white/5 transition-all cursor-pointer group"
+                      className="w-full h-64 border-2 border-dashed border-outline-variant rounded-2xl flex flex-col items-center justify-center space-y-4 hover:border-secondary/40 hover:bg-secondary/5 transition-all cursor-pointer group"
                     >
-                      <div className="p-5 rounded-2xl bg-white/5 group-hover:bg-primary/10 transition-colors">
-                        <FaUpload size={48} className="text-foreground-muted group-hover:text-primary transition-colors" />
+                      <div className="p-5 rounded-2xl bg-primary/5 group-hover:bg-secondary-container/20 transition-colors">
+                        <FaUpload size={48} className="text-primary/30 group-hover:text-secondary transition-colors" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xl font-bold">Drop your resume here</p>
-                        <p className="text-sm text-foreground-muted">PDF or DOCX supported (Max 5MB)</p>
+                        <p className="text-xl font-display font-bold text-primary">Drop your resume here</p>
+                        <p className="text-sm text-primary/50">PDF or DOCX supported (Max 5MB)</p>
                       </div>
                       <input
                         type="file"
@@ -375,12 +375,12 @@ const SkillInput: React.FC = () => {
                       value={resumeText}
                       onChange={(e) => setResumeText(e.target.value)}
                       placeholder="Paste your professional summary, job descriptions, or full resume text..."
-                      className="w-full h-64 bg-surface-container-low border border-white/10 rounded-2xl p-6 text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none shadow-inner"
+                      className="w-full h-64 bg-surface-container-low border border-outline-variant rounded-2xl p-6 text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-colors resize-none"
                     />
                     <button
                       onClick={() => analyzeText(resumeText)}
                       disabled={!resumeText.trim()}
-                      className="px-10 py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
+                      className="btn-primary disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
                     >
                       Process Experience <FaArrowRight size={20} />
                     </button>
@@ -396,7 +396,7 @@ const SkillInput: React.FC = () => {
                           value={newSkillName}
                           onChange={(e) => setNewSkillName(e.target.value)}
                           placeholder="Skill Name (e.g. React, Python)"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary/50 transition-colors"
+                          className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-colors"
                           onKeyPress={(e) => e.key === 'Enter' && handleAddManualSkill()}
                         />
                       </div>
@@ -404,33 +404,33 @@ const SkillInput: React.FC = () => {
                         <select
                           value={newSkillCategory}
                           onChange={(e) => setNewSkillCategory(e.target.value)}
-                          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-3 focus:outline-none focus:border-primary/50 transition-colors appearance-none"
+                          className="flex-1 bg-surface-container-low border border-outline-variant rounded-xl px-3 py-3 text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-colors appearance-none"
                         >
-                          <option value="Technical" className="bg-surface">Technical</option>
-                          <option value="Soft Skill" className="bg-surface">Soft Skill</option>
-                          <option value="Domain" className="bg-surface">Domain</option>
-                          <option value="Tool" className="bg-surface">Tool</option>
+                          <option value="Technical">Technical</option>
+                          <option value="Soft Skill">Soft Skill</option>
+                          <option value="Domain">Domain</option>
+                          <option value="Tool">Tool</option>
                         </select>
                         <button
                           onClick={handleAddManualSkill}
-                          className="p-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
+                          className="p-3 bg-secondary text-white rounded-xl hover:bg-blue-700 transition-colors"
                         >
                           <FaPlus size={24} />
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 min-h-[100px] p-6 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex flex-wrap gap-3 min-h-[100px] p-6 rounded-2xl bg-surface-container-low border border-outline-variant">
                       {manualSkills.length === 0 && (
-                        <div className="w-full flex flex-col items-center justify-center text-foreground-muted italic py-4">
+                        <div className="w-full flex flex-col items-center justify-center text-primary/40 italic py-4">
                           <FaPlus size={32} className="opacity-20 mb-2" />
                           <p>No manual skills added yet.</p>
                         </div>
                       )}
                       {manualSkills.map((skill, idx) => (
-                        <div key={idx} className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/10 rounded-full group">
-                          <span className="font-bold">{skill.name}</span>
-                          <span className="text-[10px] uppercase opacity-50 bg-white/10 px-2 py-0.5 rounded-md">{skill.category}</span>
+                        <div key={idx} className="flex items-center gap-2 px-4 py-2 bg-secondary-container/10 border border-outline-variant rounded-full group">
+                          <span className="font-bold text-primary">{skill.name}</span>
+                          <span className="text-[10px] uppercase text-primary/40 bg-primary/5 px-2 py-0.5 rounded-md font-bold">{skill.category}</span>
                           <button
                             onClick={() => removeManualSkill(idx)}
                             className="p-1 hover:text-red-400 transition-colors"
@@ -445,7 +445,7 @@ const SkillInput: React.FC = () => {
                       <button
                         onClick={submitManualSkills}
                         disabled={manualSkills.length === 0}
-                        className="px-10 py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
+                        className="btn-primary disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
                       >
                         Confirm Skills <FaArrowRight size={20} />
                       </button>
@@ -456,7 +456,7 @@ const SkillInput: React.FC = () => {
             )}
 
             {error && (
-              <div className="w-full p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center text-sm font-bold animate-shake">
+              <div className="w-full p-4 bg-red-50 border border-red-200/50 text-red-600 rounded-xl text-center text-sm font-bold">
                 {error}
               </div>
             )}
@@ -464,15 +464,15 @@ const SkillInput: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
-          <div className="glass rounded-[2rem] p-10 border border-white/20 shadow-2xl">
+          <div className="glass rounded-2xl p-10 shadow-ambient">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="flex items-center gap-4 text-emerald-500">
                 <div className="p-4 rounded-2xl bg-emerald-500/10">
                   <FaCircleCheck size={40} />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold">Matrix Established</h2>
-                  <p className="text-foreground-muted">Identified {(configuredSkills.length || extractedSkills.length)} tactical competencies.</p>
+                  <h2 className="text-3xl font-display font-extrabold text-primary">Matrix Established</h2>
+                  <p className="text-primary/60">Identified {(configuredSkills.length || extractedSkills.length)} tactical competencies.</p>
                 </div>
               </div>
               <button
@@ -485,7 +485,7 @@ const SkillInput: React.FC = () => {
                   setSkillConfigs({});
                   setConfigsSaved(false);
                 }}
-                className="px-6 py-2 bg-white/10 rounded-xl text-sm font-bold hover:bg-white/20 transition-colors border border-white/5"
+                className="px-6 py-2 bg-surface-container-low rounded-xl text-sm font-bold text-primary hover:bg-primary/5 transition-colors border border-outline-variant"
               >
                 Re-process Data
               </button>
@@ -496,55 +496,55 @@ const SkillInput: React.FC = () => {
                 ? configuredSkills.map((skill) => ({ skill_name: skill.skill_name, category: skill.category }))
                 : extractedSkills
               ).map((skill, i) => (
-                <div key={`${skill.skill_name}-${i}`} className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all group relative overflow-hidden">
+                <div key={`${skill.skill_name}-${i}`} className="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-secondary/30 hover:shadow-ambient transition-all group relative overflow-hidden">
                   <button
                     onClick={() => {
                       const match = configuredSkills.find((s) => s.skill_name === skill.skill_name);
                       if (match) setDeleteTarget(match);
                     }}
-                    className="absolute top-2 right-2 p-2 rounded-lg text-foreground-muted opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                    className="absolute top-2 right-2 p-2 rounded-lg text-primary/30 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all"
                     title={`Delete ${skill.skill_name}`}
                   >
                     <FaTrashCan size={14} />
                   </button>
-                  <div className="font-bold text-lg">{skill.skill_name}</div>
-                  <div className="text-xs text-primary font-bold uppercase tracking-wider">{skill.category}</div>
+                  <div className="font-bold text-lg text-primary">{skill.skill_name}</div>
+                  <div className="text-xs text-secondary font-bold uppercase tracking-wider">{skill.category}</div>
                 </div>
               ))}
             </div>
 
             {/* Per-skill Difficulty and Proficiency Selectors */}
-            <div className="mt-12 space-y-8 p-8 rounded-2xl bg-white/5 border border-white/10">
+            <div className="mt-12 space-y-8 p-8 rounded-2xl bg-surface-container-low border border-outline-variant">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h3 className="text-xl font-bold">Configure Every Skill Before Initialization</h3>
+                <h3 className="text-xl font-display font-bold text-primary">Configure Every Skill Before Initialization</h3>
                 <button
                   onClick={handleSaveConfigurations}
                   disabled={isSavingConfigs || configuredSkills.length === 0}
-                  className="px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
+                  className="btn-secondary disabled:opacity-50"
                 >
                   {isSavingConfigs ? 'Saving...' : 'Save Skill Configuration'}
                 </button>
               </div>
 
               {configuredSkills.length === 0 ? (
-                <p className="text-sm text-foreground-muted">Loading skills for configuration...</p>
+                <p className="text-sm text-primary/50">Loading skills for configuration...</p>
               ) : (
                 <div className="space-y-4">
                   {configuredSkills.map((skill) => {
                     const config = skillConfigs[skill.skill_id] || { difficulty: null, proficiency_claimed: null };
                     return (
-                      <div key={skill.skill_id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div key={skill.skill_id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-4 p-4 rounded-xl bg-surface-container-lowest border border-outline-variant">
                         <div>
-                          <p className="font-bold text-lg">{skill.skill_name}</p>
-                          <p className="text-xs text-foreground-muted uppercase tracking-wider">{skill.category}</p>
+                          <p className="font-bold text-lg text-primary">{skill.skill_name}</p>
+                          <p className="text-xs text-primary/50 uppercase tracking-wider font-semibold">{skill.category}</p>
                         </div>
 
                         <label className="space-y-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Difficulty</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-primary/50">Difficulty</span>
                           <select
                             value={config.difficulty ?? ''}
                             onChange={(e) => updateSkillConfig(skill.skill_id, 'difficulty', parseInt(e.target.value, 10))}
-                            className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-primary/50"
+                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40"
                           >
                             <option value="">Select</option>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
@@ -554,11 +554,11 @@ const SkillInput: React.FC = () => {
                         </label>
 
                         <label className="space-y-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Claimed Proficiency</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-primary/50">Claimed Proficiency</span>
                           <select
                             value={config.proficiency_claimed ?? ''}
                             onChange={(e) => updateSkillConfig(skill.skill_id, 'proficiency_claimed', parseInt(e.target.value, 10))}
-                            className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-primary/50"
+                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40"
                           >
                             <option value="">Select</option>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
@@ -570,7 +570,7 @@ const SkillInput: React.FC = () => {
                         <div className="flex items-end">
                           <button
                             onClick={() => setDeleteTarget(skill)}
-                            className="p-2.5 rounded-xl text-foreground-muted opacity-60 hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                            className="p-2.5 rounded-xl text-primary/30 opacity-60 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all"
                             title={`Delete ${skill.skill_name}`}
                           >
                             <FaTrashCan size={16} />
@@ -583,17 +583,17 @@ const SkillInput: React.FC = () => {
               )}
 
               {!allSkillsConfigured && (
-                <p className="text-sm text-amber-400 font-medium">
+                <p className="text-sm text-amber-600 font-medium">
                   Select both difficulty and proficiency for every skill to continue.
                 </p>
               )}
               {allSkillsConfigured && !configsSaved && (
-                <p className="text-sm text-amber-400 font-medium">
+                <p className="text-sm text-amber-600 font-medium">
                   Save your skill configuration before initializing dashboard.
                 </p>
               )}
               {allSkillsConfigured && configsSaved && (
-                <p className="text-sm text-emerald-400 font-medium">
+                <p className="text-sm text-emerald-600 font-medium">
                   All skill settings saved. You can now initialize dashboard.
                 </p>
               )}
@@ -603,7 +603,7 @@ const SkillInput: React.FC = () => {
               <button
                 disabled={!canInitializeDashboard}
                 onClick={() => navigate('/dashboard')}
-                className="px-12 py-5 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 flex items-center gap-4 text-xl group disabled:opacity-50 disabled:hover:bg-primary"
+                className="btn-primary px-12 py-5 rounded-2xl flex items-center gap-4 text-xl group disabled:opacity-50 disabled:hover:scale-100"
               >
                 Initialize Dashboard
                 <FaGlobe className="group-hover:rotate-12 transition-transform" size={24} />
@@ -611,7 +611,7 @@ const SkillInput: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-center text-foreground-muted text-sm italic opacity-50">
+          <p className="text-center text-primary/40 text-sm italic">
             "Every artifact added strengthens your digital architectural footprint."
           </p>
         </div>
@@ -622,26 +622,26 @@ const SkillInput: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-primary/40 backdrop-blur-sm"
             onClick={() => !isDeleting && setDeleteTarget(null)}
           />
           {/* Modal */}
-          <div className="relative bg-surface-container border border-white/15 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-ambient p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center text-center space-y-5">
-              <div className="w-16 h-16 rounded-full bg-red-500/15 flex items-center justify-center">
-                <FaTrashCan size={28} className="text-red-400" />
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                <FaTrashCan size={28} className="text-red-500" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold">Delete Skill</h3>
-                <p className="text-foreground-muted text-sm">
-                  Are you sure you want to remove <span className="text-white font-semibold">{deleteTarget.skill_name}</span> from your profile? This action cannot be undone.
+                <h3 className="text-xl font-display font-bold text-primary">Delete Skill</h3>
+                <p className="text-primary/60 text-sm">
+                  Are you sure you want to remove <span className="text-primary font-bold">{deleteTarget.skill_name}</span> from your profile? This action cannot be undone.
                 </p>
               </div>
               <div className="flex gap-3 w-full pt-2">
                 <button
                   onClick={() => setDeleteTarget(null)}
                   disabled={isDeleting}
-                  className="flex-1 px-6 py-3 rounded-xl font-bold bg-white/10 hover:bg-white/20 border border-white/10 transition-all disabled:opacity-50"
+                  className="flex-1 px-6 py-3 rounded-xl font-bold bg-surface-container-low hover:bg-primary/5 border border-outline-variant text-primary transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>

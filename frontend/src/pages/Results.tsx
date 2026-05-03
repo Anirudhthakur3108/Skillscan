@@ -1,6 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaCircleExclamation, FaBolt, FaArrowUpRightFromSquare, FaSpinner, FaShieldHalved, FaMap, FaTable } from 'react-icons/fa6';
+import {
+  FaSpinner,
+} from 'react-icons/fa6';
+import {
+  FiAlertTriangle,
+  FiAward,
+  FiBarChart2,
+  FiBookOpen,
+  FiCheckCircle,
+  FiChevronRight,
+  FiRefreshCw,
+  FiShield,
+  FiTarget,
+  FiTrendingUp,
+  FiMap,
+} from 'react-icons/fi';
 import apiClient from '../api/client';
 
 const Results: React.FC = () => {
@@ -51,13 +66,13 @@ const Results: React.FC = () => {
         if (data?.status === 'completed') {
           await fetchReassessmentEligibility(false);
         }
-        
+
         // Prefer server-provided skill_score_id when available
         if (data.skill_score_id) {
           setSkillScoreId(data.skill_score_id);
           localStorage.setItem(`skillScoreId_${assessmentId}`, data.skill_score_id.toString());
         }
-        
+
         // Get skill_score_id from localStorage
         const storedSkillScoreId = localStorage.getItem(`skillScoreId_${assessmentId}`);
         if (!data.skill_score_id && storedSkillScoreId) {
@@ -70,7 +85,7 @@ const Results: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchResults();
   }, [assessmentId]);
 
@@ -132,23 +147,29 @@ const Results: React.FC = () => {
     }
   };
 
+  // ─── Loading state ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <FaSpinner size={48} className="animate-spin text-primary" />
+      <div className="min-h-[70vh] flex flex-col items-center justify-center">
+        <FaSpinner size={48} className="animate-spin text-secondary mb-4" />
+        <p className="text-primary/60 font-medium animate-pulse">Loading results...</p>
       </div>
     );
   }
 
-  if (error || !assessment) {
+  // ─── Error / not found state ────────────────────────────────────────────────
+  if (error && !assessment) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="glass p-8 rounded-3xl border border-red-500/20 max-w-md text-center space-y-4">
-          <h2 className="text-xl font-bold text-red-400">Error</h2>
-          <p className="text-foreground-muted">{error || "Results not found."}</p>
-          <button 
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="card-tonal max-w-md text-center space-y-4">
+          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <FiAlertTriangle size={24} className="text-red-500" />
+          </div>
+          <h2 className="text-xl font-display font-bold text-primary">Something went wrong</h2>
+          <p className="text-primary/60 text-sm">{error}</p>
+          <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-2 bg-white/5 rounded-lg font-bold hover:bg-white/10"
+            className="btn-secondary"
           >
             Return to Dashboard
           </button>
@@ -156,6 +177,8 @@ const Results: React.FC = () => {
       </div>
     );
   }
+
+  if (!assessment) return null;
 
   const aiFeedback = assessment.ai_feedback || {};
   const overallScore = aiFeedback.overall_score || aiFeedback.score || 0;
@@ -165,161 +188,217 @@ const Results: React.FC = () => {
   const longAnswerFeedback = aiFeedback.long_answer_feedback || {};
   const caseStudyFeedback = aiFeedback.case_study_feedback || {};
   const identifiedGaps = aiFeedback.identified_gaps || [];
-  
-  // For backwards compatibility (unused arrays removed to avoid TS no-unused errors)
+
+  /** Score color helper */
+  const scoreColor = (score: number) => {
+    if (score >= 8) return 'text-emerald-600';
+    if (score >= 5) return 'text-amber-600';
+    return 'text-red-500';
+  };
+
+  const progressColor = (score: number) => {
+    if (score >= 8) return 'bg-emerald';
+    if (score >= 5) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
 
   return (
-    <div className="container mx-auto px-6 py-12 max-w-5xl space-y-16">
-      {/* Hero Result Section */}
-      <div className="glass rounded-[3rem] p-12 lg:p-16 border border-white/20 shadow-2xl relative overflow-hidden text-center lg:text-left">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[120px] -mr-48 -mt-48" />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
-              <FaShieldHalved size={18} />
+    <div className="container mx-auto px-6 py-12 max-w-5xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ─── Error Banner ────────────────────────────────────────────────── */}
+      {error && (
+        <div className="glass p-4 rounded-xl border-red-200/50 bg-red-50/60 flex items-start gap-3">
+          <FiAlertTriangle className="text-red-500 shrink-0 mt-0.5" size={18} />
+          <p className="text-red-600 font-semibold text-sm flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none">×</button>
+        </div>
+      )}
+
+      {/* ─── Hero Result Card ────────────────────────────────────────────── */}
+      <div className="glass rounded-2xl p-8 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-secondary/8 to-transparent rounded-bl-full -z-[1]" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          {/* Left: Info */}
+          <div className="lg:col-span-2 space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary-container/20 text-secondary text-xs font-bold uppercase tracking-wider">
+              <FiShield size={14} />
               Skill Validation Report
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold">{assessment.skill_name || 'Assessment'} Results</h1>
-            <p className="text-xl text-foreground-muted leading-relaxed">
-              Based on our AI-driven assessment, your technical capabilities have been successfully evaluated.
+            <h1 className="text-3xl lg:text-4xl font-display font-extrabold text-primary tracking-tight">
+              {assessment.skill_name || 'Assessment'} Results
+            </h1>
+            <p className="text-primary/60 text-lg leading-relaxed max-w-lg">
+              Based on our AI-driven assessment, your capabilities have been evaluated and scored.
             </p>
-            <div className="flex gap-4">
-              <button 
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
                 onClick={() => navigate('/assessment')}
-                className="px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                className="btn-primary flex items-center gap-2 text-sm"
               >
                 Back to Assessments
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/dashboard')}
-                className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 font-bold hover:bg-white/10 transition-colors"
+                className="px-5 py-3 rounded-md border border-outline-variant text-primary font-semibold hover:bg-surface-container-low transition-colors text-sm"
               >
                 Dashboard
               </button>
             </div>
           </div>
-          
-          <div className="relative z-10 flex flex-col items-center justify-center p-8 glass rounded-3xl border border-white/10 aspect-square">
-            <div className="text-8xl font-black text-primary mb-2">{overallScore}</div>
-            <div className="text-lg font-bold uppercase tracking-widest text-foreground-muted">Overall Score</div>
-            <div className="mt-8 h-2 w-full bg-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all" style={{ width: `${overallScore * 10}%` }} />
+
+          {/* Right: Score circle */}
+          <div className="flex flex-col items-center justify-center p-8 glass rounded-2xl aspect-square max-w-[200px] mx-auto lg:mx-0 lg:ml-auto">
+            <div className={`text-7xl font-display font-extrabold ${scoreColor(overallScore)} leading-none`}>
+              {overallScore}
+            </div>
+            <div className="text-xs font-bold text-primary/50 uppercase tracking-wider mt-2">
+              Overall Score
+            </div>
+            <div className="mt-5 h-2 w-full bg-primary/5 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${progressColor(overallScore)} rounded-full transition-all duration-700`}
+                style={{ width: `${overallScore * 10}%` }}
+              />
             </div>
           </div>
         </div>
       </div>
 
+      {/* ─── Calibration Insight ──────────────────────────────────────────── */}
       {(typeof selectedProficiency === 'number' || typeof performanceGap === 'number') && (
-        <div className="glass p-6 rounded-2xl border border-white/10">
-          <h3 className="text-xl font-bold mb-3">Calibration Insight</h3>
-          <p className="text-sm text-foreground-muted">
-            Target proficiency: <span className="font-bold text-primary">{selectedProficiency ?? 'N/A'}/10</span>.
-            Performance gap: <span className="font-bold text-primary"> {performanceGap ?? 0}</span> points.
-          </p>
+        <div className="glass p-5 rounded-xl flex items-center gap-4">
+          <div className="p-2.5 rounded-lg bg-blue-100 text-secondary">
+            <FiTarget size={20} />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-primary/50 uppercase tracking-wider mb-0.5">Calibration Insight</div>
+            <p className="text-sm text-primary/70 font-medium">
+              Target proficiency: <span className="font-bold text-primary">{selectedProficiency ?? 'N/A'}/10</span>.
+              {' '}Performance gap: <span className="font-bold text-primary">{performanceGap ?? 0}</span> points.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Score Breakdown */}
+      {/* ─── Score Breakdown ──────────────────────────────────────────────── */}
       {mcqFeedback && mcqFeedback.total && (
-        <div className="space-y-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-              <FaTable size={28} />
-            </div>
-            <h2 className="text-3xl font-bold">Score Breakdown</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="glass p-8 rounded-3xl border border-white/10 space-y-4">
-              <h3 className="text-xl font-bold">MCQ Performance</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground-muted">Correct Answers:</span>
-                  <span className="text-2xl font-bold text-primary">{mcqFeedback.correct}/{mcqFeedback.total}</span>
-                </div>
-                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${mcqFeedback.percentage}%` }} />
-                </div>
-                <div className="text-sm text-foreground-muted text-center">
-                  {mcqFeedback.percentage}% Success Rate
-                </div>
-              </div>
-            </div>
-
-            {longAnswerFeedback && (
-              <div className="glass p-8 rounded-3xl border border-white/10 space-y-4">
-                <h3 className="text-xl font-bold">Coding Challenge</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground-muted">Score:</span>
-                    <span className="text-2xl font-bold text-primary">{longAnswerFeedback.score || 'N/A'}/10</span>
-                  </div>
-                  {longAnswerFeedback.feedback && (
-                    <p className="text-sm text-foreground-muted">{longAnswerFeedback.feedback}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {caseStudyFeedback && (
-              <div className="glass p-8 rounded-3xl border border-white/10 space-y-4">
-                <h3 className="text-xl font-bold">Case Study</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground-muted">Score:</span>
-                    <span className="text-2xl font-bold text-primary">{caseStudyFeedback.score || 'N/A'}/10</span>
-                  </div>
-                  {caseStudyFeedback.feedback && (
-                    <p className="text-sm text-foreground-muted">{caseStudyFeedback.feedback}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Identified Gaps */}
-      {identifiedGaps && identifiedGaps.length > 0 && (
-        <div className="space-y-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400">
-              <FaCircleExclamation size={28} />
-            </div>
-            <h2 className="text-3xl font-bold">Identified Skill Gaps</h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {identifiedGaps.map((gap: any, i: number) => (
-              <div key={i} className={`glass p-6 rounded-2xl border ${gap.severity === 'high' ? 'border-red-500/20 bg-red-500/5' : gap.severity === 'medium' ? 'border-amber-500/20 bg-amber-500/5' : 'border-yellow-500/20 bg-yellow-500/5'}`}>
-                <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${gap.severity === 'high' ? 'bg-red-500/20 text-red-400' : gap.severity === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                    <span className="text-xs font-bold uppercase tracking-wider">{gap.severity}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-lg">{gap.gap_name}</h4>
-                    <p className="text-sm text-foreground-muted mt-1">{gap.reason}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Reassessment Gate */}
-      {assessment?.status === 'completed' && (
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400">
-              <FaBolt size={28} />
-            </div>
-            <h2 className="text-3xl font-bold">Reassessment Readiness</h2>
-          </div>
+          <h2 className="text-2xl font-display font-extrabold text-primary flex items-center gap-3">
+            <FiBarChart2 size={22} className="text-secondary" />
+            Score Breakdown
+          </h2>
 
-          <div className="glass p-8 rounded-3xl border border-white/10 space-y-5">
-            <label className="flex items-center gap-3 text-sm font-medium">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* MCQ */}
+            <div className="glass p-6 rounded-2xl space-y-4 hover:shadow-ambient transition-shadow">
+              <h3 className="font-display font-bold text-primary text-lg">MCQ Performance</h3>
+              <div className="flex items-baseline justify-between">
+                <span className="text-primary/60 text-sm font-medium">Correct Answers</span>
+                <span className="text-2xl font-display font-extrabold text-primary">
+                  {mcqFeedback.correct}<span className="text-sm font-semibold text-primary/40">/{mcqFeedback.total}</span>
+                </span>
+              </div>
+              <div className="h-2 bg-primary/5 rounded-full overflow-hidden">
+                <div className="h-full bg-secondary rounded-full transition-all duration-700" style={{ width: `${mcqFeedback.percentage}%` }} />
+              </div>
+              <div className="text-xs font-semibold text-primary/50 text-center">
+                {mcqFeedback.percentage}% Success Rate
+              </div>
+            </div>
+
+            {/* Coding / Writing */}
+            {longAnswerFeedback && (
+              <div className="glass p-6 rounded-2xl space-y-4 hover:shadow-ambient transition-shadow">
+                <h3 className="font-display font-bold text-primary text-lg">
+                  {assessment.category_type === 'soft_skill' ? 'Writing Task' :
+                   assessment.category_type === 'domain' ? 'Analytical Task' :
+                   assessment.category_type === 'tool' ? 'Workflow Task' : 'Coding Challenge'}
+                </h3>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-primary/60 text-sm font-medium">Score</span>
+                  <span className={`text-2xl font-display font-extrabold ${scoreColor(longAnswerFeedback.score || 0)}`}>
+                    {longAnswerFeedback.score || 'N/A'}<span className="text-sm font-semibold text-primary/40">/10</span>
+                  </span>
+                </div>
+                {longAnswerFeedback.feedback && (
+                  <p className="text-sm text-primary/60 leading-relaxed">{longAnswerFeedback.feedback}</p>
+                )}
+              </div>
+            )}
+
+            {/* Case Study */}
+            {caseStudyFeedback && (
+              <div className="glass p-6 rounded-2xl space-y-4 hover:shadow-ambient transition-shadow">
+                <h3 className="font-display font-bold text-primary text-lg">
+                  {assessment.category_type === 'soft_skill' ? 'Behavioral Scenario' :
+                   assessment.category_type === 'domain' ? 'Strategic Case Study' :
+                   assessment.category_type === 'tool' ? 'Integration Scenario' : 'Case Study'}
+                </h3>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-primary/60 text-sm font-medium">Score</span>
+                  <span className={`text-2xl font-display font-extrabold ${scoreColor(caseStudyFeedback.score || 0)}`}>
+                    {caseStudyFeedback.score || 'N/A'}<span className="text-sm font-semibold text-primary/40">/10</span>
+                  </span>
+                </div>
+                {caseStudyFeedback.feedback && (
+                  <p className="text-sm text-primary/60 leading-relaxed">{caseStudyFeedback.feedback}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Identified Gaps ─────────────────────────────────────────────── */}
+      {identifiedGaps && identifiedGaps.length > 0 && (
+        <div className="space-y-5">
+          <h2 className="text-2xl font-display font-extrabold text-primary flex items-center gap-3">
+            <FiAlertTriangle size={22} className="text-amber-500" />
+            Identified Skill Gaps
+          </h2>
+
+          <div className="space-y-3">
+            {identifiedGaps.map((gap: any, i: number) => {
+              const severityStyles = {
+                high: 'bg-red-50 border-red-200/50',
+                medium: 'bg-amber-50 border-amber-200/50',
+                low: 'bg-yellow-50 border-yellow-200/50',
+              } as Record<string, string>;
+              const badgeStyles = {
+                high: 'bg-red-100 text-red-600',
+                medium: 'bg-amber-100 text-amber-600',
+                low: 'bg-yellow-100 text-yellow-600',
+              } as Record<string, string>;
+
+              return (
+                <div key={i} className={`p-5 rounded-xl border ${severityStyles[gap.severity] || severityStyles.low}`}>
+                  <div className="flex items-start gap-4">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md shrink-0 ${badgeStyles[gap.severity] || badgeStyles.low}`}>
+                      {gap.severity}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-display font-bold text-primary text-base">{gap.gap_name}</h4>
+                      <p className="text-sm text-primary/60 mt-1 leading-relaxed">{gap.reason}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Reassessment Gate ───────────────────────────────────────────── */}
+      {assessment?.status === 'completed' && (
+        <div className="space-y-5">
+          <h2 className="text-2xl font-display font-extrabold text-primary flex items-center gap-3">
+            <FiRefreshCw size={22} className="text-secondary" />
+            Reassessment Readiness
+          </h2>
+
+          <div className="glass p-6 rounded-2xl space-y-5">
+            <label className="flex items-center gap-3 text-sm font-medium text-primary/80 cursor-pointer">
               <input
                 type="checkbox"
                 checked={studyCompleted}
@@ -328,25 +407,36 @@ const Results: React.FC = () => {
                   setStudyCompleted(checked);
                   await fetchReassessmentEligibility(checked);
                 }}
-                className="w-4 h-4 rounded cursor-pointer"
+                className="w-4 h-4 rounded border-primary/20 text-secondary focus:ring-secondary/30 cursor-pointer"
               />
               I completed the recommended study plan and want to request early reassessment
             </label>
 
             {isCheckingEligibility ? (
-              <div className="flex items-center gap-2 text-sm text-foreground-muted">
+              <div className="flex items-center gap-2 text-sm text-primary/50">
                 <FaSpinner className="animate-spin" />
                 Checking reassessment eligibility...
               </div>
             ) : (
               reassessmentEligibility && (
-                <div className={`p-4 rounded-xl border ${reassessmentEligibility.eligible ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-amber-500/20 bg-amber-500/5'}`}>
-                  <p className={`font-bold ${reassessmentEligibility.eligible ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {reassessmentEligibility.eligible ? 'Eligible for reassessment' : 'Not yet eligible'}
-                  </p>
-                  <p className="text-sm text-foreground-muted mt-1">{reassessmentEligibility.reason}</p>
+                <div className={`p-4 rounded-xl border ${
+                  reassessmentEligibility.eligible
+                    ? 'border-emerald/20 bg-emerald-50'
+                    : 'border-amber-200/50 bg-amber-50'
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    {reassessmentEligibility.eligible
+                      ? <FiCheckCircle className="text-emerald-600" size={16} />
+                      : <FiAlertTriangle className="text-amber-600" size={16} />}
+                    <p className={`font-bold text-sm ${
+                      reassessmentEligibility.eligible ? 'text-emerald-700' : 'text-amber-700'
+                    }`}>
+                      {reassessmentEligibility.eligible ? 'Eligible for reassessment' : 'Not yet eligible'}
+                    </p>
+                  </div>
+                  <p className="text-sm text-primary/60 ml-6">{reassessmentEligibility.reason}</p>
                   {reassessmentEligibility.next_eligible_at && (
-                    <p className="text-xs text-foreground-muted mt-2">
+                    <p className="text-xs text-primary/40 mt-2 ml-6">
                       Next cooldown eligibility: {new Date(reassessmentEligibility.next_eligible_at).toLocaleString()}
                     </p>
                   )}
@@ -357,142 +447,105 @@ const Results: React.FC = () => {
             <button
               onClick={handleStartReassessment}
               disabled={isStartingReassessment || !reassessmentEligibility?.eligible}
-              className="w-full md:w-auto px-6 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors disabled:opacity-50"
+              className="btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isStartingReassessment ? 'Starting reassessment...' : 'Start Reassessment'}
+              {isStartingReassessment ? (
+                <><FaSpinner className="animate-spin" size={16} /> Starting...</>
+              ) : (
+                <><FiRefreshCw size={16} /> Start Reassessment</>
+              )}
             </button>
           </div>
         </div>
       )}
 
-      {/* Learning Architecture (Roadmap) */}
+      {/* ─── Learning Plan CTA ───────────────────────────────────────────── */}
       {assessment?.ai_feedback?.gap_identified && (
-        <div className="space-y-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-              <FaMap size={28} />
-            </div>
-            <h2 className="text-3xl font-bold">Your Learning Architecture</h2>
-          </div>
+        <div className="space-y-5">
+          <h2 className="text-2xl font-display font-extrabold text-primary flex items-center gap-3">
+            <FiMap size={22} className="text-secondary" />
+            Your Learning Architecture
+          </h2>
 
           {!learningPlanData ? (
             <button
               onClick={handleGenerateLearningPlan}
               disabled={isGeneratingPlan || !skillScoreId}
-              className="w-full px-8 py-6 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center justify-center gap-2"
+              className="w-full p-6 glass rounded-2xl hover:shadow-ambient transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
             >
               {isGeneratingPlan ? (
                 <>
-                  <FaSpinner className="animate-spin" size={20} />
-                  Generating Personalized Plan...
+                  <FaSpinner className="animate-spin text-secondary" size={20} />
+                  <span className="font-bold text-primary">Generating Personalized Plan...</span>
                 </>
               ) : (
                 <>
-                  <FaMap size={20} />
-                  Generate Your Learning Plan
+                  <div className="p-3 rounded-xl bg-secondary-container/20 text-secondary group-hover:scale-110 transition-transform">
+                    <FiBookOpen size={24} />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-display font-bold text-primary text-lg">Generate Your Learning Plan</div>
+                    <div className="text-sm text-primary/50">Get a personalized roadmap to bridge your skill gaps</div>
+                  </div>
+                  <FiChevronRight size={20} className="text-primary/30 ml-auto" />
                 </>
               )}
             </button>
           ) : (
-            <div className="space-y-8">
-              <div className="glass p-8 rounded-3xl border border-white/10">
-                <h3 className="text-2xl font-bold mb-4">{learningPlanData.skill_name}</h3>
-                <p className="text-foreground-muted leading-relaxed mb-4">{learningPlanData.summary}</p>
-                <div className="flex items-center gap-4">
-                  <div className="text-sm font-bold">
-                    <span className="text-primary text-lg">{learningPlanData.total_weeks}</span> weeks
-                  </div>
+            <div className="glass p-8 rounded-2xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600">
+                  <FiAward size={20} />
                 </div>
+                <h3 className="text-xl font-display font-bold text-primary">{learningPlanData.skill_name}</h3>
               </div>
-
-              {/* Learning Phases */}
-              {learningPlanData.plan?.phases && learningPlanData.plan.phases.map((phase: any, phaseIdx: number) => (
-                <div key={phaseIdx} className="space-y-4">
-                  <div className="glass p-8 rounded-3xl border border-white/10">
-                    <h4 className="text-2xl font-bold mb-2">Phase {phase.phase_number}: {phase.title}</h4>
-                    <p className="text-foreground-muted mb-4">{phase.description}</p>
-                    <div className="text-sm font-bold text-primary mb-4">Duration: {phase.timeline_weeks || phase.duration_weeks} weeks</div>
-
-                    {/* YouTube Resources */}
-                    {phase.youtube_resources && phase.youtube_resources.length > 0 && (
-                      <div className="mb-6">
-                        <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-primary"></span>
-                          Video Resources
-                        </h5>
-                        <div className="grid gap-3">
-                          {phase.youtube_resources.map((video: any, idx: number) => (
-                            <a
-                              key={idx}
-                              href={video.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all flex items-start justify-between gap-4 group"
-                            >
-                              <div className="flex-1">
-                                <p className="font-bold group-hover:text-primary transition-colors">{video.title}</p>
-                                <p className="text-xs text-foreground-muted mt-1">{video.duration_minutes} minutes</p>
-                              </div>
-                              <FaArrowUpRightFromSquare className="text-foreground-muted group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Website Resources */}
-                    {phase.website_resources && phase.website_resources.length > 0 && (
-                      <div>
-                        <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-primary"></span>
-                          Study Materials
-                        </h5>
-                        <div className="grid gap-3">
-                          {phase.website_resources.map((resource: any, idx: number) => (
-                            <a
-                              key={idx}
-                              href={resource.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all flex items-start justify-between gap-4 group"
-                            >
-                              <div className="flex-1">
-                                <p className="font-bold group-hover:text-primary transition-colors">{resource.title}</p>
-                                <p className="text-xs text-foreground-muted mt-1">
-                                  {resource.category} • {resource.estimated_hours} hours
-                                </p>
-                              </div>
-                              <FaArrowUpRightFromSquare className="text-foreground-muted group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Milestones */}
-                    {phase.milestones && phase.milestones.length > 0 && (
-                      <div className="mt-6 pt-6 border-t border-white/10">
-                        <h5 className="font-bold text-lg mb-3">Milestones</h5>
-                        <ul className="space-y-2">
-                          {phase.milestones.map((milestone: string, idx: number) => (
-                            <li key={idx} className="flex items-center gap-3 text-sm text-foreground-muted">
-                              <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
-                              {milestone}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              <p className="text-primary/60 leading-relaxed">{learningPlanData.summary}</p>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-bold text-primary text-lg">{learningPlanData.total_weeks}</span>
+                <span className="text-primary/50 font-medium">weeks estimated</span>
+              </div>
+              <button
+                onClick={() => navigate('/learning-plan')}
+                className="btn-primary flex items-center gap-2 text-sm mt-4"
+              >
+                <FiBookOpen size={16} /> View Full Plan
+              </button>
             </div>
           )}
         </div>
       )}
+
+      {/* ─── Quick Actions ───────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          onClick={() => navigate('/learning-plan')}
+          className="glass p-5 rounded-xl hover:shadow-ambient transition-all flex items-center gap-4 text-left group"
+        >
+          <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600 group-hover:scale-110 transition-transform">
+            <FiBookOpen size={20} />
+          </div>
+          <div>
+            <div className="font-display font-bold text-primary">Learning Plans</div>
+            <div className="text-xs text-primary/50">View all your personalized roadmaps</div>
+          </div>
+          <FiChevronRight size={18} className="text-primary/30 ml-auto" />
+        </button>
+        <button
+          onClick={() => navigate('/assessment')}
+          className="glass p-5 rounded-xl hover:shadow-ambient transition-all flex items-center gap-4 text-left group"
+        >
+          <div className="p-3 rounded-xl bg-blue-100 text-secondary group-hover:scale-110 transition-transform">
+            <FiTrendingUp size={20} />
+          </div>
+          <div>
+            <div className="font-display font-bold text-primary">All Assessments</div>
+            <div className="text-xs text-primary/50">Review your verification history</div>
+          </div>
+          <FiChevronRight size={18} className="text-primary/30 ml-auto" />
+        </button>
+      </div>
     </div>
   );
 };
 
 export default Results;
-

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import {  FaUserPlus, FaEnvelope, FaLock, FaGraduationCap, FaSpinner } from 'react-icons/fa6';
+import { FaUserPlus, FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa6';
+import { FiLogIn, FiShield } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { FaSignInAlt } from 'react-icons/fa';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,7 +29,7 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
       if (isLogin) {
         const response = await apiClient.post('/auth/login', { email, password });
@@ -39,10 +39,10 @@ const AuthPage: React.FC = () => {
           name: response.data.student.full_name
         });
       } else {
-        const response = await apiClient.post('/auth/register', { 
-          email, 
+        const response = await apiClient.post('/auth/register', {
+          email,
           password,
-          full_name: fullName 
+          full_name: fullName
         });
         login(response.data.access_token, {
           id: response.data.student.id,
@@ -59,39 +59,42 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-20 px-6 relative overflow-hidden">
-      {/* Decorative background elements matching the Academic Architect theme */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -z-10" />
+    <div className="min-h-screen flex items-center justify-center px-6 py-16 bg-background relative overflow-hidden">
+      {/* Decorative background blurs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-secondary/8 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald/6 rounded-full blur-[120px] -z-10" />
 
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
-        <div className="text-center mb-10 space-y-2">
-          <div className="inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-4">
-            <FaGraduationCap size={32} />
+        {/* Header */}
+        <div className="text-center mb-10 space-y-3">
+          <div className="inline-flex p-3.5 rounded-2xl bg-secondary-container/20 text-secondary mb-2">
+            <FiShield size={32} />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            {isLogin ? 'Welcome Back' : 'Define Your Legacy'}
-          </h2>
-          <p className="text-foreground-muted">
-            {isLogin 
-              ? 'Sign in to continue your skill validation journey' 
-              : 'Join the global network of verified scholars'}
+          <h1 className="text-3xl font-display font-extrabold text-primary tracking-tight">
+            {isLogin ? 'Welcome Back' : 'Create Your Account'}
+          </h1>
+          <p className="text-primary/60 font-medium">
+            {isLogin
+              ? 'Sign in to continue your skill verification journey'
+              : 'Join the platform to verify and showcase your skills'}
           </p>
         </div>
 
-        <div className="glass p-8 rounded-[2rem] border border-white/20 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form Card */}
+        <div className="glass p-8 rounded-2xl shadow-ambient">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm font-medium text-center">
+              <div className="p-3.5 bg-red-50 border border-red-200/50 text-red-600 rounded-xl text-sm font-semibold text-center">
                 {error}
               </div>
             )}
+
             {!isLogin && (
-              <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1">Full Name</label>
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-primary/70 ml-1">Full Name</label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                    <FaUserPlus size={18} />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-primary/30 group-focus-within:text-secondary transition-colors">
+                    <FaUserPlus size={16} />
                   </div>
                   <input
                     type="text"
@@ -99,41 +102,41 @@ const AuthPage: React.FC = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-11 pr-4 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-foreground-muted/50"
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-xl py-3 pl-11 pr-4 text-primary font-medium focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-all placeholder:text-primary/30 outline-none"
                   />
                 </div>
               </div>
             )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">Academic Email</label>
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-primary/70 ml-1">Email</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                  <FaEnvelope size={18} />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-primary/30 group-focus-within:text-secondary transition-colors">
+                  <FaEnvelope size={16} />
                 </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@university.edu"
-                  className="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-11 pr-4 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-foreground-muted/50"
+                  placeholder="name@email.com"
+                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl py-3 pl-11 pr-4 text-primary font-medium focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-all placeholder:text-primary/30 outline-none"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center px-1">
-                <label className="text-sm font-semibold">Password</label>
+                <label className="text-sm font-bold text-primary/70">Password</label>
                 {isLogin && (
-                  <button type="button" className="text-xs text-primary hover:underline font-medium">
+                  <button type="button" className="text-xs text-secondary hover:underline font-semibold">
                     Forgot?
                   </button>
                 )}
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-foreground-muted group-focus-within:text-primary transition-colors">
-                  <FaLock size={18} />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-primary/30 group-focus-within:text-secondary transition-colors">
+                  <FaLock size={16} />
                 </div>
                 <input
                   type="password"
@@ -141,7 +144,7 @@ const AuthPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-11 pr-4 focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl py-3 pl-11 pr-4 text-primary font-medium focus:ring-2 focus:ring-secondary/20 focus:border-secondary/40 transition-all placeholder:text-primary/30 outline-none"
                 />
               </div>
             </div>
@@ -149,27 +152,27 @@ const AuthPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3.5 btn-primary flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed rounded-xl"
             >
               {isLoading ? (
                 <FaSpinner size={20} className="animate-spin" />
               ) : isLogin ? (
-                <>Sign In <FaSignInAlt size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                <>Sign In <FiLogIn size={18} className="group-hover:translate-x-1 transition-transform" /></>
               ) : (
-                <>Create Account <FaUserPlus size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                <>Create Account <FaUserPlus size={18} className="group-hover:translate-x-1 transition-transform" /></>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-foreground-muted">
+          <div className="mt-6 pt-6 border-t border-outline-variant text-center">
+            <p className="text-sm text-primary/60 font-medium">
               {isLogin ? "Don't have an account?" : "Already a member?"}{' '}
               <button
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError('');
                 }}
-                className="text-primary font-bold hover:underline"
+                className="text-secondary font-bold hover:underline"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
@@ -177,10 +180,11 @@ const AuthPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-12 flex justify-center gap-6 text-xs text-foreground-muted font-medium uppercase tracking-widest">
-          <Link to="/" className="hover:text-primary">Privacy</Link>
-          <Link to="/" className="hover:text-primary">Terms</Link>
-          <Link to="/" className="hover:text-primary">Support</Link>
+        {/* Footer links */}
+        <div className="mt-10 flex justify-center gap-6 text-xs text-primary/40 font-semibold uppercase tracking-widest">
+          <Link to="/" className="hover:text-secondary transition-colors">Privacy</Link>
+          <Link to="/" className="hover:text-secondary transition-colors">Terms</Link>
+          <Link to="/" className="hover:text-secondary transition-colors">Support</Link>
         </div>
       </div>
     </div>
@@ -188,4 +192,3 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
-
