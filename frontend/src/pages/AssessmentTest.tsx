@@ -50,6 +50,7 @@ interface AssessmentData {
   difficulty?: number;
   num_questions?: number;
   time_limit_minutes?: number;
+  category_type?: string; // 'technical' | 'soft_skill' | 'domain' | 'tool'
   questions: {
     mcq?: MCQQuestion[];
     coding?: CodingQuestion[];
@@ -107,6 +108,7 @@ const AssessmentTest: React.FC = () => {
           difficulty: data.difficulty,
           num_questions: data.num_questions,
           time_limit_minutes: data.time_limit_minutes,
+          category_type: data.category_type || 'technical',
           questions: data.questions || { mcq: [] },
         });
       } catch (err: any) {
@@ -193,22 +195,46 @@ const AssessmentTest: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ─── Section label helper ──────────────────────────────────────────────────
+  // ─── Section label helper (category-aware) ────────────────────────────────
+  const catType = assessment?.category_type || 'technical';
+
   const sectionLabel = (type: string) => {
-    switch (type) {
-      case 'mcq': return 'Multiple Choice';
-      case 'coding': return 'Coding Challenge';
-      case 'case_study': return 'Case Study';
-      default: return '';
+    if (type === 'mcq') return 'Multiple Choice';
+    if (type === 'coding') {
+      switch (catType) {
+        case 'soft_skill': return 'Writing Task';
+        case 'domain':     return 'Analytical Scenario';
+        case 'tool':       return 'Workflow Task';
+        default:           return 'Coding Challenge';
+      }
     }
+    if (type === 'case_study') {
+      switch (catType) {
+        case 'soft_skill': return 'Behavioral Scenario';
+        case 'domain':     return 'Strategic Case Study';
+        case 'tool':       return 'Integration Scenario';
+        default:           return 'Case Study';
+      }
+    }
+    return '';
   };
 
   const sectionIcon = (type: string) => {
     switch (type) {
       case 'mcq': return <LuBrainCircuit size={16} />;
-      case 'coding': return <FaCode size={16} />;
+      case 'coding': return catType === 'technical' ? <FaCode size={16} /> : <FaBookOpen size={16} />;
       case 'case_study': return <FaBookOpen size={16} />;
       default: return null;
+    }
+  };
+
+  /** Coding placeholder adapts to category */
+  const codingPlaceholder = () => {
+    switch (catType) {
+      case 'soft_skill': return 'Write your professional response here...';
+      case 'domain':     return 'Write your analysis and recommendations here...';
+      case 'tool':       return 'Describe the steps and workflow here...';
+      default:           return 'Write your code / solution here...';
     }
   };
 
@@ -315,7 +341,8 @@ const AssessmentTest: React.FC = () => {
 
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-indigo-500/15 text-indigo-400 font-bold text-sm min-w-fit mt-1">
-              <FaCode size={16} className="inline mr-1" /> Code
+              {catType === 'technical' ? <FaCode size={16} className="inline mr-1" /> : <FaBookOpen size={16} className="inline mr-1" />}
+              {catType === 'soft_skill' ? 'Writing Task' : catType === 'domain' ? 'Analysis' : catType === 'tool' ? 'Workflow' : 'Code'}
             </div>
 
             <h2 className="text-2xl font-bold leading-relaxed text-[#071a56]">
@@ -361,14 +388,14 @@ const AssessmentTest: React.FC = () => {
 
           <div>
             <label className="text-xs font-bold uppercase tracking-wide text-indigo-300 mb-2 block">
-              Your Answer
+              Your {catType === 'soft_skill' ? 'Response' : catType === 'domain' ? 'Analysis' : catType === 'tool' ? 'Steps' : 'Answer'}
             </label>
 
             <textarea
               rows={10}
               value={codingAnswers[q.id] || ''}
               onChange={(e) => handleTextAnswer(q.id, e.target.value, 'coding')}
-              placeholder="Write your code / solution here..."
+              placeholder={codingPlaceholder()}
               className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 focus:outline-none resize-y"
             />
           </div>
@@ -598,7 +625,10 @@ const AssessmentTest: React.FC = () => {
           {/* Legend */}
           <div className="flex flex-wrap gap-4 mt-4 text-xs text-foreground-muted">
             <span className="flex items-center gap-1"><LuBrainCircuit size={12} /> MCQ</span>
-            <span className="flex items-center gap-1"><FaCode size={12} className="text-emerald-400" /> Coding</span>
+            <span className="flex items-center gap-1">
+              {catType === 'technical' ? <FaCode size={12} className="text-emerald-400" /> : <FaBookOpen size={12} className="text-emerald-400" />}
+              {catType === 'soft_skill' ? 'Writing Task' : catType === 'domain' ? 'Analysis' : catType === 'tool' ? 'Workflow' : 'Coding'}
+            </span>
             <span className="flex items-center gap-1"><FaBookOpen size={12} className="text-violet-400" /> Case Study</span>
           </div>
         </div>

@@ -99,7 +99,7 @@ def _safe_parse_json(raw: str) -> Optional[Union[dict, list]]:
     return None
 
 
-def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperature: float = 0.3) -> str:
+def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperature: float = 0.3, max_tokens: int = 16384) -> str:
     """Call Mistral with the appropriate model tier. Returns raw text.
 
     Raises RuntimeError if the API key is missing or the call fails.
@@ -109,7 +109,7 @@ def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperat
         raise RuntimeError("MISTRAL_API_KEY is not configured. Set it in .env to enable AI generation.")
 
     model = MODELS[model_key]
-    print(f"[Mistral] Calling model={model} tier={model_key} timeout={_client_timeout}s ...")
+    print(f"[Mistral] Calling model={model} tier={model_key} timeout={_client_timeout}s max_tokens={max_tokens} ...")
 
     t0 = time.time()
     response = client.chat(
@@ -119,7 +119,7 @@ def _call_mistral(model_key: str, system_prompt: str, user_prompt: str, temperat
         ],
         model=model,
         temperature=temperature,
-        max_tokens=8192,
+        max_tokens=max_tokens,
     )
     elapsed = time.time() - t0
     content = response.choices[0].message.content
@@ -227,23 +227,39 @@ def _normalize_assessment_payload(data: dict, skill_name: str, claimed_proficien
     }
 
 
-# ─── 1. Assessment Generation ─────────────────────────────────────────────────
+# ─── 1. Category-Aware Prompt Configuration ──────────────────────────────────
 
-def generate_assessment(skill_name: str, claimed_proficiency: int, num_questions: int = 10) -> AIAssessmentResponse:
-    """
-    Generate a skill assessment using Mistral AI.
-    Returns a strictly validated AIAssessmentResponse with all question types.
-    Raises RuntimeError if AI generation fails.
-    """
-    system_prompt = (
-        "You are an expert technical skills assessor. "
-        "You MUST respond with valid JSON ONLY — no preamble, no explanation outside the JSON object. "
-        "Strictly follow the schema provided in the user message."
-    )
-    user_prompt = f"""Generate a comprehensive skill assessment for: **{skill_name}**
-The student claims a proficiency level of {claimed_proficiency}/10.
+# Maps skill categories to their assessment strategy.
+# "technical_categories" use the coding+case_study mix.
+# All others get tailored alternatives that reuse the same JSON keys.
+TECHNICAL_CATEGORIES = frozenset({
+    "Frontend", "Backend", "Database", "Cloud", "DevOps", "Data Science",
+    "Technical",  # manual-entry catch-all
+})
 
-Return ONLY a JSON object matching this exact schema:
+
+def _get_category_type(category: str) -> str:
+    """Classify a raw category string into one of four assessment types."""
+    if not category:
+        return "technical"  # safe default
+    cat = category.strip()
+    if cat in TECHNICAL_CATEGORIES:
+        return "technical"
+    cat_lower = cat.lower()
+    if cat_lower in ("soft skill", "soft skills"):
+        return "soft_skill"
+    if cat_lower == "domain":
+        return "domain"
+    if cat_lower in ("tool", "tools"):
+        return "tool"
+    return "technical"  # fallback
+
+
+def _build_category_prompt(skill_name: str, category_type: str, num_questions: int, claimed_proficiency: int) -> tuple:
+    """Return (system_prompt, category_specific_instructions) for the AI."""
+
+    # ── JSON schema is the same for every category (reuses mcq/coding/case_study keys)
+    json_schema = f"""Return ONLY a JSON object matching this exact schema:
 {{
   "skill_name": "{skill_name}",
   "mcq": [
@@ -279,14 +295,103 @@ Return ONLY a JSON object matching this exact schema:
       "evaluation_criteria": ["criteria 1", "criteria 2"]
     }}
   ]
-}}
+}}"""
 
-Generate exactly {num_questions} MCQ questions.
-Generate exactly 2 coding questions.
-Generate exactly 1 case study question.
+    if category_type == "soft_skill":
+        system_prompt = (
+            "You are an expert behavioral and soft-skills assessor. "
+            "You specialize in evaluating interpersonal, leadership, and communication competencies. "
+            "You MUST respond with valid JSON ONLY — no preamble, no explanation outside the JSON object. "
+            "Strictly follow the schema provided in the user message."
+        )
+        mix_instructions = f"""Generate exactly {num_questions} MCQ questions.
+Generate exactly 2 items in the "coding" array — but these are NOT programming tasks.
+Instead, each "coding" item must be a **Professional Writing Task** relevant to {skill_name}.
+- "problem_statement" should describe a realistic workplace scenario requiring a written response (e.g., drafting an email to a difficult stakeholder, writing a team update, composing a conflict resolution message).
+- "constraints" should list tone, audience, and length requirements.
+- "example_input" should provide context or background information.
+- "example_output" should be empty string "".
+- "hints" should provide writing tips.
+Generate exactly 1 case study that is a **Behavioral Scenario** — a detailed workplace conflict, leadership challenge, or team dynamics situation requiring a multi-step resolution plan.
+MCQ questions should be Situational Judgement Tests ("What would you do if...") — NOT trivia about soft-skill definitions."""
+
+    elif category_type == "domain":
+        system_prompt = (
+            "You are an expert domain-knowledge assessor specializing in industry-specific evaluation. "
+            "You assess regulatory awareness, strategic thinking, and domain expertise. "
+            "You MUST respond with valid JSON ONLY — no preamble, no explanation outside the JSON object. "
+            "Strictly follow the schema provided in the user message."
+        )
+        mix_instructions = f"""Generate exactly {num_questions} MCQ questions focused on industry terminology, regulations, workflows, and best practices for {skill_name}.
+Generate exactly 2 items in the "coding" array — but these are NOT programming tasks.
+Instead, each "coding" item must be an **Analytical Scenario** relevant to {skill_name}.
+- "problem_statement" should describe a business situation requiring analysis (e.g., identifying risks, evaluating a process bottleneck, proposing a compliance strategy).
+- "constraints" should list regulatory or business requirements.
+- "example_input" should provide sample data or context.
+- "example_output" should be empty string "".
+- "hints" should provide analytical frameworks or tips.
+Generate exactly 1 case study that is a **Strategic Business Scenario** — a comprehensive industry situation requiring a detailed solution with compliance, stakeholder, and operational considerations.
+MCQ questions should test applied domain knowledge, NOT generic definitions."""
+
+    elif category_type == "tool":
+        system_prompt = (
+            "You are an expert tool-proficiency assessor. "
+            "You evaluate practical knowledge of software tools, workflows, features, and integrations. "
+            "You MUST respond with valid JSON ONLY — no preamble, no explanation outside the JSON object. "
+            "Strictly follow the schema provided in the user message."
+        )
+        mix_instructions = f"""Generate exactly {num_questions} MCQ questions about {skill_name} features, shortcuts, settings, and best practices.
+Generate exactly 2 items in the "coding" array — but these are NOT programming tasks.
+Instead, each "coding" item must be a **Step-by-Step Workflow Task** for {skill_name}.
+- "problem_statement" should describe a practical task the user must accomplish using {skill_name} (e.g., "Explain the steps to create a dynamic pivot table in Excel" or "Describe how to set up an automated Jira workflow").
+- "constraints" should list specific tool versions or feature requirements.
+- "example_input" should describe the starting state or context.
+- "example_output" should be empty string "".
+- "hints" should list relevant tool features or menu paths.
+Generate exactly 1 case study that is a **Tool Integration / Workspace Setup Scenario** — a situation where the user must plan how to use {skill_name} in a team environment, configure it for a project, or integrate it with other tools.
+MCQ questions should test practical feature knowledge, NOT generic software definitions."""
+
+    else:  # technical (default)
+        system_prompt = (
+            "You are an expert technical skills assessor. "
+            "You MUST respond with valid JSON ONLY — no preamble, no explanation outside the JSON object. "
+            "Strictly follow the schema provided in the user message."
+        )
+        mix_instructions = f"""Generate exactly {num_questions} MCQ questions.
+Generate exactly 2 coding questions with real algorithmic or functional programming problems.
+Generate exactly 1 case study question about system design, architecture, or debugging.
+Questions must be directly relevant to {skill_name}, with a balanced mix of conceptual, applied, troubleshooting, and best-practice scenarios."""
+
+    return system_prompt, json_schema, mix_instructions
+
+
+# ─── 1. Assessment Generation ─────────────────────────────────────────────────
+
+def generate_assessment(skill_name: str, claimed_proficiency: int, num_questions: int = 10, skill_category: str = "") -> AIAssessmentResponse:
+    """
+    Generate a skill assessment using Mistral AI.
+    The question mix adapts based on skill_category:
+      - Technical (Frontend/Backend/etc): MCQ + Coding + Case Study
+      - Soft Skill: MCQ (SJTs) + Writing Tasks + Behavioral Scenarios
+      - Domain: MCQ (Industry) + Analytical Tasks + Strategic Scenarios
+      - Tool: MCQ (Features) + Workflow Tasks + Integration Scenarios
+    Returns a strictly validated AIAssessmentResponse.
+    Raises RuntimeError if AI generation fails.
+    """
+    category_type = _get_category_type(skill_category)
+    system_prompt, json_schema, mix_instructions = _build_category_prompt(
+        skill_name, category_type, num_questions, claimed_proficiency
+    )
+
+    user_prompt = f"""Generate a comprehensive skill assessment for: **{skill_name}**
+Skill category: {skill_category or 'Technical'}
+The student claims a proficiency level of {claimed_proficiency}/10.
+
+{json_schema}
+
+{mix_instructions}
 Calibrate difficulty to proficiency {claimed_proficiency}/10 (1=beginner, 10=expert).
 All MCQ questions must be unique and non-repetitive.
-Questions must be directly relevant to {skill_name}, with a balanced mix of conceptual, applied, troubleshooting, and best-practice scenarios.
 """
     raw = _call_mistral("generation", system_prompt, user_prompt)
     data = _safe_parse_json(raw)

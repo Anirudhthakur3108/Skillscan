@@ -16,6 +16,7 @@ from ai_service import (
     score_assessment, 
     analyze_gaps,
     generate_enhanced_learning_plan,
+    _get_category_type,
 )
 
 assessments_bp = Blueprint('assessments', __name__)
@@ -202,7 +203,7 @@ def _randomize_mcq_option_order(question_data: dict) -> dict:
     return randomized
 
 
-def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, proficiency_claimed: int, num_questions: int, exclude_mcq_ids: set = None):
+def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, proficiency_claimed: int, num_questions: int, exclude_mcq_ids: set = None, skill_category: str = ""):
     """Resolve a set of assessment questions — cached or AI-generated.
 
     Returns (question_data, source_label).  Raises RuntimeError if AI
@@ -224,11 +225,12 @@ def _resolve_question_set(skill_id: int, skill_name: str, difficulty: int, profi
         generated["coding"] = cached_questions.get("coding", [])
         generated["case_study"] = cached_questions.get("case_study", [])
 
-    # Generate fresh questions from Mistral AI
+    # Generate fresh questions from Mistral AI (category-aware)
     ai_response = generate_assessment(
         skill_name,
         proficiency_claimed,
         num_questions=num_questions,
+        skill_category=skill_category,
     )
     batch = ai_response.model_dump()
     generated["mcq"].extend(batch.get("mcq", []))
@@ -336,6 +338,9 @@ def generate():
 
     # Get difficulty-based test configuration
     num_questions, time_limit_minutes = _get_difficulty_config(difficulty)
+
+    # Determine category type for adaptive question mix
+    category_type = _get_category_type(taxonomy.category or '')
     
     try:
         questions_data, source = _resolve_question_set(
@@ -344,6 +349,7 @@ def generate():
             difficulty=difficulty,
             proficiency_claimed=proficiency_claimed,
             num_questions=num_questions,
+            skill_category=taxonomy.category or '',
         )
     except Exception as e:
         return jsonify({
@@ -373,6 +379,8 @@ def generate():
         "status": "success",
         "assessment_id": assessment.id,
         "skill_name": taxonomy.skill_name,
+        "skill_category": taxonomy.category or 'Technical',
+        "category_type": category_type,
         "source": source,
         "difficulty": difficulty,
         "num_questions": num_questions,
@@ -641,9 +649,13 @@ def get_assessment(assessment_id: int):
     score_detail = AssessmentScoreDetail.query.filter_by(assessment_id=assessment_id).first()
     skill_score = SkillScore.query.filter_by(assessment_id=assessment_id).first()
 
+    category_type = _get_category_type(taxonomy.category or '') if taxonomy else 'technical'
+
     return jsonify({
         "assessment_id": assessment_id,
         "skill_name": taxonomy.skill_name if taxonomy else "Unknown",
+        "skill_category": taxonomy.category if taxonomy else "Technical",
+        "category_type": category_type,
         "status": assessment.status,
         "skill_score_id": skill_score.id if skill_score else None,
         "gap_identified": skill_score.gap_identified if skill_score else None,
@@ -770,7 +782,8 @@ def reassess(assessment_id: int):
             difficulty=difficulty,
             proficiency_claimed=proficiency_claimed,
             num_questions=num_questions,
-            exclude_mcq_ids=exclude_mcq_ids
+            exclude_mcq_ids=exclude_mcq_ids,
+            skill_category=taxonomy.category if taxonomy else '',
         )
     except Exception as e:
         return jsonify({"error": "AI generation failed", "details": str(e)}), 502
